@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ecg-01",
+    "query": "How many workflow steps does ECG Document Intelligence have?",
+    "namespace": "ecg",
+    "must_contain": ["7"]
+  },
+  {
+    "id": "ecg-02",
+    "query": "ECG supported input formats WFDB EDF",
+    "namespace": "ecg",
+    "must_contain": ["WFDB", "EDF"]
+  },
+  {
+    "id": "ecg-03",
+    "query": "ECG OCR multilingual clinical",
+    "namespace": "ecg",
+    "must_contain": ["OCR"]
+  }
+]

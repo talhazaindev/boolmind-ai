@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Boolmind Advisor Admin</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0f1629; color: #e8e8f0; }
+    h1 { color: #3DBDD6; }
+    pre { background: #1a2238; padding: 1rem; border-radius: 8px; overflow: auto; }
+    a { color: #5B4FD6; }
+  </style>
+</head>
+<body>
+  <h1>Advisor Admin</h1>
+  <p><a href="/advisor">← Back to chat</a></p>
+  <pre id="stats">Loading…</pre>
+  <script>
+    fetch('/api/admin/stats').then(r => r.json()).then(d => {
+      document.getElementById('stats').textContent = JSON.stringify(d, null, 2);
+    }).catch(e => {
+      document.getElementById('stats').textContent = 'Error: ' + e.message;
+    });
+  </script>
+</body>
+</html>

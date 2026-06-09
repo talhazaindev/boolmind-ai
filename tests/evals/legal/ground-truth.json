@@ -1,0 +1,20 @@
+[
+  {
+    "id": "legal-01",
+    "query": "Legal Data Fusion workflow steps",
+    "namespace": "legal",
+    "must_contain": ["6"]
+  },
+  {
+    "id": "legal-02",
+    "query": "Legal Data Fusion ingest file formats",
+    "namespace": "legal",
+    "must_contain": ["CSV", "JSON"]
+  },
+  {
+    "id": "legal-03",
+    "query": "Golden schema legal fusion",
+    "namespace": "legal",
+    "must_contain": ["Golden"]
+  }
+]

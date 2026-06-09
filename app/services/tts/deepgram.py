@@ -6,7 +6,7 @@ from typing import AsyncIterator, Optional
 from urllib.parse import urlencode
 
 from deepgram import AsyncDeepgramClient
-from deepgram.extensions.types.sockets import SpeakV1ControlMessage, SpeakV1TextMessage
+from deepgram.speak.v1.types import SpeakV1Flush, SpeakV1Text
 
 from app.core.config import settings
 from app.services.tts.base import TTSStreamError
@@ -33,11 +33,11 @@ class DeepgramSpeakSession:
         if not text.strip():
             return
         logger.debug("[tts] send_text len=%d", len(text))
-        await self._conn.send_text(SpeakV1TextMessage(type="Speak", text=text))
+        await self._conn.send_text(SpeakV1Text(type="Speak", text=text))
 
     async def send_flush(self) -> None:
         logger.debug("[tts] send_flush")
-        await self._conn.send_control(SpeakV1ControlMessage(type="Flush"))
+        await self._conn.send_flush(SpeakV1Flush(type="Flush"))
 
     async def receive_audio_chunks(self) -> AsyncIterator[bytes]:
         """Yield raw audio bytes as they arrive from Deepgram. Stops when we get Flushed (end of response)."""

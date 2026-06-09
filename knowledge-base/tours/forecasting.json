@@ -1,0 +1,53 @@
+{
+  "productId": "forecasting",
+  "productName": "Forecasting Engine",
+  "tagline": "AI-powered demand forecasting in 8 steps",
+  "totalSteps": 5,
+  "steps": [
+    {
+      "step": 1,
+      "title": "Ingest Signals",
+      "body": "Connect sales history, inventory, promotions, store data, and weather feeds into the forecasting pipeline.",
+      "visualType": "diagram",
+      "visualContent": "flowchart LR; Sales --> FE[Forecasting Engine]; Weather --> FE; Promo --> FE;",
+      "highlightStat": "Multi-source time series",
+      "workflowStepRef": "Step 1 — Data Ingest"
+    },
+    {
+      "step": 2,
+      "title": "Feature Engineering",
+      "body": "Automatic seasonality, lags, and categorical features per product and store hierarchy.",
+      "visualType": "workflow",
+      "visualContent": "Feature store in PostgreSQL powers model training.",
+      "highlightStat": "Automated feature pipelines",
+      "workflowStepRef": "Step 2 — Feature Engineering"
+    },
+    {
+      "step": 3,
+      "title": "Train & Forecast",
+      "body": "Multiple ML models compete; best models produce SKU/store/period forecasts with confidence intervals.",
+      "visualType": "stat",
+      "visualContent": "Backtested accuracy metrics per hierarchy level.",
+      "highlightStat": "Multi-model selection",
+      "workflowStepRef": "Steps 3–4 — Model Training & Sales Forecasting"
+    },
+    {
+      "step": 4,
+      "title": "Weather & Promotions",
+      "body": "Quantify weather impact on demand and measure promotion ROI before you spend.",
+      "visualType": "workflow",
+      "visualContent": "Scenario analysis for campaigns and climate events.",
+      "highlightStat": "Promotion ROI modeling",
+      "workflowStepRef": "Steps 5–6 — Weather & Promotion Analysis"
+    },
+    {
+      "step": 5,
+      "title": "Inventory & Insights",
+      "body": "Stockout risk alerts, optimal stock levels, category trends, and store segmentation dashboards.",
+      "visualType": "diagram",
+      "visualContent": "Hierarchical insights from SKU to category to chain.",
+      "highlightStat": "Actionable planning outputs",
+      "workflowStepRef": "Steps 7–8 — Inventory & Hierarchical Insights"
+    }
+  ]
+}

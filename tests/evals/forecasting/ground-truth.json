@@ -1,0 +1,14 @@
+[
+  {"id": "fc-01", "query": "Forecasting Engine workflow steps", "namespace": "forecasting", "must_contain": ["8"]},
+  {"id": "fc-02", "query": "sales forecasting machine learning time series", "namespace": "forecasting", "must_contain": ["forecast"]},
+  {"id": "fc-03", "query": "weather impact on product demand", "namespace": "forecasting", "must_contain": ["weather"]},
+  {"id": "fc-04", "query": "promotion ROI analysis discount", "namespace": "forecasting", "must_contain": ["promotion"]},
+  {"id": "fc-05", "query": "inventory stockout risk prediction", "namespace": "forecasting", "must_contain": ["stockout"]},
+  {"id": "fc-06", "query": "hierarchical category forecasting retail", "namespace": "forecasting", "must_contain": ["hierarchical"]},
+  {"id": "fc-07", "query": "store segmentation performance patterns", "namespace": "forecasting", "must_contain": ["store"]},
+  {"id": "fc-08", "query": "Forecasting Engine FastAPI PostgreSQL stack", "namespace": "forecasting", "must_contain": ["FastAPI"]},
+  {"id": "fc-09", "query": "Forecasting Engine vs Retify data unification", "namespace": "forecasting", "must_contain": ["Retify"]},
+  {"id": "fc-10", "query": "cross-industry demand forecasting use cases", "namespace": "forecasting", "must_contain": ["cross-industry"]},
+  {"id": "fc-11", "query": "retail sales prediction inventory optimization", "namespace": "forecasting", "must_contain": ["retail"]},
+  {"id": "fc-12", "query": "feature engineering time series pipeline", "namespace": "forecasting", "must_contain": ["feature"]}
+]
