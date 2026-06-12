@@ -55,6 +55,8 @@ def _known_summary(meta: SessionMetadata) -> str:
 
 
 def should_synthesize(meta: SessionMetadata) -> bool:
+    if meta.reasoning_phase not in ("discovery", "convergence"):
+        return False
     if meta.message_count < 3 or meta.message_count % 3 != 0:
         return False
     return bool(meta.business_type or meta.industry or meta.pain_point)

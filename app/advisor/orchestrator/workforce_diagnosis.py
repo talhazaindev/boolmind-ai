@@ -248,10 +248,17 @@ def build_workforce_diagnosis_block(
     message: str = "",
     history: list[str] | None = None,
 ) -> str:
+    from app.advisor.orchestrator.reasoning_engine import rank_hypotheses
+
     insight = workforce_strategic_insight(meta, message, history)
     tradeoff = strategic_tradeoff_insight(meta, message, history)
     diag_q = workforce_diagnostic_question(meta, message, history)
-    hypothesis = infer_workforce_hypothesis(meta, message, history)
+    ids = detect_workforce_hypotheses(meta, message, history)
+    pairs = [(h, _HYPOTHESIS_LABELS.get(h, h)) for h in ids]
+    ranked = rank_hypotheses(pairs, message, history)
+    hypo_lines = "\n".join(
+        f"  - {h.label} (~{int(h.confidence * 100)}%)" for h in ranked[:5]
+    )
 
     return (
         f"\n\nWORKFORCE DIAGNOSIS REQUIRED (validate before any intervention):\n"
@@ -259,7 +266,8 @@ def build_workforce_diagnosis_block(
         f"You are at VALIDATION — evidence is NOT confirmation.\n"
         f"1. Acknowledge what's working (e.g. rising enrollment) before the turnover gap.\n"
         f"{insight}\n"
-        f"2. Turnover hypothesis: {hypothesis} (unconfirmed until user validates ONE driver).\n"
+        f"2. List 3–5 turnover hypotheses (ranked, unconfirmed):\n"
+        f"{hypo_lines or '  - compensation, workload, career growth, management'}\n"
         f"3. STRATEGIC TRADEOFF — explain business implications aloud:\n"
         f"   {tradeoff}\n"
         f"4. {no_solutions_clause()}\n"

@@ -7,6 +7,7 @@ import re
 from app.advisor.orchestrator.diagnostic_validation import (
     response_contains_premature_solutions,
 )
+from app.advisor.types import ReasoningPhase
 
 _EMAIL_ASK_PATTERNS = [
     r"\b(email|e-mail)\s+(address|id)\b",
@@ -63,4 +64,55 @@ def premature_solution_rewrite_instruction() -> str:
         "\n\nREWRITE REQUIRED: You proposed solutions before validating the root cause. "
         "Remove all intervention suggestions. State business insight and tradeoff analysis, "
         "then end with ONE comparative validation question only."
+    )
+
+
+_BOOLMIND_MARKERS = ("boolmind", "boolmind.ai")
+
+def response_contains_premature_boolmind(
+    text: str,
+    reasoning_phase: ReasoningPhase,
+) -> bool:
+    if reasoning_phase in ("solution_exploration", "boolmind_positioning"):
+        return False
+    lower = text.lower()
+    return any(marker in lower for marker in _BOOLMIND_MARKERS)
+
+
+def response_missing_hypothesis_structure(
+    text: str,
+    reasoning_phase: ReasoningPhase,
+) -> bool:
+    """Phase 2 should enumerate multiple hypotheses."""
+    if reasoning_phase != "hypothesis_generation":
+        return False
+    lower = text.lower()
+    if any(kw in lower for kw in ("possibilit", "could be", "hypothes", "several")):
+        return False
+    hypothesis_terms = (
+        "pricing",
+        "onboarding",
+        "complexity",
+        "segment",
+        "competition",
+        "workload",
+        "compensation",
+        "retention",
+        "conversion",
+    )
+    hits = sum(1 for term in hypothesis_terms if term in lower)
+    return hits < 2
+
+
+def boolmind_guard_rewrite_instruction() -> str:
+    return (
+        "\n\nREWRITE REQUIRED: Remove any Boolmind mention. "
+        "Stay in diagnostic mode — hypotheses and validation only."
+    )
+
+
+def hypothesis_structure_rewrite_instruction() -> str:
+    return (
+        "\n\nREWRITE REQUIRED: List 3–5 plausible hypotheses ranked by likelihood, "
+        "then end with ONE differentiating question. No solutions yet."
     )

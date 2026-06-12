@@ -26,6 +26,40 @@ class ReadinessFlags(BaseModel):
 
 ConversationMode = Literal["discover", "diagnose", "advise", "recommend", "deliver"]
 UserSophistication = Literal["low", "medium", "high"]
+ReasoningPhase = Literal[
+    "discovery",
+    "hypothesis_generation",
+    "hypothesis_testing",
+    "convergence",
+    "strategic_insight",
+    "solution_exploration",
+    "boolmind_positioning",
+]
+HypothesisStatus = Literal["active", "confirmed", "rejected"]
+BusinessModel = Literal[
+    "saas",
+    "subscription",
+    "service",
+    "education",
+    "local_retail",
+    "unknown",
+]
+
+
+class HypothesisState(BaseModel):
+    id: str
+    label: str
+    confidence: float = 0.0
+    status: HypothesisStatus = "active"
+    evidence_for: list[str] = Field(default_factory=list)
+    evidence_against: list[str] = Field(default_factory=list)
+
+
+class EvidenceEntry(BaseModel):
+    turn: int
+    text: str
+    supports: list[str] = Field(default_factory=list)
+    contradicts: list[str] = Field(default_factory=list)
 
 
 class TurnEvaluation(BaseModel):
@@ -81,6 +115,14 @@ class SessionMetadata(BaseModel):
     profit_hypothesis: str | None = None
     workforce_hypothesis: str | None = None
     channels_active: list[str] = Field(default_factory=list)
+    # Consulting reasoning state
+    reasoning_phase: ReasoningPhase = "discovery"
+    business_model: str | None = None
+    funnel_stage: str | None = None
+    hypotheses: list[HypothesisState] = Field(default_factory=list)
+    evidence_log: list[EvidenceEntry] = Field(default_factory=list)
+    last_convergence_turn: int = 0
+    insight_delivered_turn: int = 0
 
 
 class ChatMessage(BaseModel):

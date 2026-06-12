@@ -68,14 +68,17 @@ class ChatClearRequest(BaseModel):
 def _ensure_tier_a() -> None:
     if not settings.advisor_tier_a_ready:
         missing = []
-        if not settings.groq_configured:
-            missing.append("GROQ_API_KEY or GROQ_API_KEY_1..4")
+        if not settings.llm_configured:
+            if settings.llm_provider_resolved == "ollama":
+                missing.append("OLLAMA_BASE_URL / OLLAMA_MODEL")
+            else:
+                missing.append("GROQ_API_KEY or GROQ_API_KEY_1..4")
         if not settings.embeddings_configured:
             missing.append("EMBEDDING_PROVIDER / OPENAI_API_KEY")
         if not settings.pinecone_configured:
             missing.append("PINECONE_*")
-        if not settings.upstash_configured:
-            missing.append("UPSTASH_REDIS_*")
+        if not settings.redis_configured:
+            missing.append("REDIS_URL or UPSTASH_REDIS_*")
         raise HTTPException(
             status_code=503,
             detail=f"Advisor not configured. Missing: {', '.join(missing)}",

@@ -4,9 +4,11 @@ from app.advisor.orchestrator.product_context import ProductContext
 from app.advisor.orchestrator.system_prompt import (
     SystemPromptContext,
     build_discovery_section,
+    build_reasoning_section,
     build_system_prompt,
     count_prompt_tokens,
 )
+from app.advisor.types import HypothesisState
 from app.advisor.types import PageContext, ReadinessFlags, SessionMetadata, TurnEvaluation
 
 
@@ -62,6 +64,27 @@ def test_build_discovery_section() -> None:
     assert "DISCOVERY STATE" in section
     assert "industry=retail" in section
     assert "goals" in section
+
+
+def test_build_reasoning_section() -> None:
+    section = build_reasoning_section(
+        SessionMetadata(
+            reasoning_phase="hypothesis_testing",
+            business_model="saas",
+            funnel_stage="conversion",
+            hypotheses=[
+                HypothesisState(
+                    id="onboarding_friction",
+                    label="onboarding friction",
+                    confidence=0.55,
+                )
+            ],
+        )
+    )
+    assert section is not None
+    assert "REASONING STATE" in section
+    assert "saas" in section
+    assert "onboarding" in section.lower()
 
 
 def test_token_count_under_1800() -> None:

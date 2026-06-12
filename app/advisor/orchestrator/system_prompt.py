@@ -74,7 +74,7 @@ SECTION_L = """ADVISORY BEHAVIOR (strategy-first, industry-specific):
 - GOAL LOCK: When primary_goal is growth/marketing, NEVER pivot to document management, data ops, or catalog products — stay on how prospects find the business.
 - DIAGNOSE BEFORE TACTICS: State inference (what works vs not) before recommending SEO, posting more, or setup steps. If user already has Google/Instagram, diagnose execution — do NOT tell them to set up again.
 - METRIC FIRST: Identify which business metric the user is optimizing (growth, throughput, profitability, workforce, efficiency) BEFORE choosing a diagnostic framework.
-- CONSULTING FLOW: Problem → Evidence → Hypothesis → Validation → Business Insight → Solution. Evidence (feedback, complaints) is NOT confirmed root cause.
+- CONSULTING FLOW (7 phases): Discovery → Hypothesis Generation (3–5 ranked) → Hypothesis Testing → Convergence (every 3–4 turns) → Strategic Insight → Solution Exploration → Boolmind Positioning (last). Evidence is NOT confirmed root cause.
 - THROUGHPUT: delivery/backlog only — validate bottleneck before solutions.
 - PROFITABILITY: margins/pricing — validate pricing vs utilization vs mix before tactics.
 - WORKFORCE: turnover/retention — validate compensation vs workload vs career growth vs management. Do NOT suggest programs or hiring until ONE driver is confirmed.
@@ -120,6 +120,37 @@ def _known_profile_lines(meta: SessionMetadata) -> list[str]:
     if meta.constraints:
         known.append(f"constraints={meta.constraints}")
     return known
+
+
+_PHASE_LABELS: dict[str, str] = {
+    "discovery": "1/7 Discovery",
+    "hypothesis_generation": "2/7 Hypothesis Generation",
+    "hypothesis_testing": "3/7 Hypothesis Testing",
+    "convergence": "4/7 Convergence",
+    "strategic_insight": "5/7 Strategic Insight",
+    "solution_exploration": "6/7 Solution Exploration",
+    "boolmind_positioning": "7/7 Boolmind Positioning",
+}
+
+
+def build_reasoning_section(meta: SessionMetadata | None) -> str | None:
+    if meta is None or meta.reasoning_phase == "discovery":
+        return None
+    lines = [f"REASONING STATE:\nPhase: {_PHASE_LABELS.get(meta.reasoning_phase, meta.reasoning_phase)}"]
+    if meta.business_model and meta.business_model != "unknown":
+        lines.append(f"Business model: {meta.business_model}")
+    if meta.funnel_stage:
+        lines.append(f"Funnel stage: {meta.funnel_stage}")
+    active = [h for h in meta.hypotheses if h.status == "active"]
+    if active:
+        hypo_summary = ", ".join(
+            f"{h.label.split('—')[0].strip()} ({int(h.confidence * 100)}%)"
+            for h in active[:5]
+        )
+        lines.append(f"Active hypotheses: {hypo_summary}")
+    if meta.last_convergence_turn:
+        lines.append(f"Last convergence: turn {meta.last_convergence_turn}")
+    return "\n".join(lines)
 
 
 def build_discovery_section(
@@ -230,6 +261,10 @@ def build_system_prompt(ctx: SystemPromptContext) -> str:
     discovery_section = build_discovery_section(ctx.session_data, ctx.discovery)
     if discovery_section:
         parts.append(discovery_section)
+
+    reasoning_section = build_reasoning_section(ctx.session_data)
+    if reasoning_section:
+        parts.append(reasoning_section)
 
     if ctx.user_language and ctx.user_language != "en":
         parts.append(

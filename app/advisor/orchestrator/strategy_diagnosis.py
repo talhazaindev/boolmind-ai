@@ -63,6 +63,30 @@ _GROWTH_SIGNALS = (
     "invest",
 )
 
+_GROWTH_HYPOTHESIS_SIGNALS: dict[str, tuple[str, ...]] = {
+    "pricing_sensitivity": ("pricing", "price", "too expensive", "cost", "sticker shock"),
+    "onboarding_friction": ("onboarding", "setup", "getting started", "activation"),
+    "product_complexity": ("complex", "confusing", "hard to use", "overwhelming"),
+    "wrong_segment": ("wrong fit", "unqualified", "bad fit", "wrong customer"),
+    "competition": ("competitor", "alternative", "switching"),
+    "discovery": ("discover", "find us", "awareness", "visibility", "traffic"),
+    "conversion": ("convert", "don't buy", "look but don't", "visit but don't"),
+    "retention": ("churn", "returning less", "don't come back", "cancel"),
+    "execution": ("not working", "underperform", "already have", "neither seems"),
+}
+
+_GROWTH_HYPOTHESIS_LABELS: dict[str, str] = {
+    "pricing_sensitivity": "pricing sensitivity — cost or plan mismatch",
+    "onboarding_friction": "onboarding friction — users don't reach value quickly",
+    "product_complexity": "product complexity — setup or learning curve too steep",
+    "wrong_segment": "wrong customer segment — poor-fit prospects",
+    "competition": "increased competition — alternatives look better",
+    "discovery": "discovery gap — not enough people find the business",
+    "conversion": "conversion gap — interest doesn't become customers",
+    "retention": "retention gap — customers don't return or renew",
+    "execution": "channel execution — existing channels underperform",
+}
+
 _DIAGNOSTIC_BY_BLOCKER: dict[str, str] = {
     "discovery": (
         "How do new customers currently find {business} — and which of those channels "
@@ -103,6 +127,87 @@ def has_referral_traffic(
 ) -> bool:
     blob = _blob(meta, message, history or [])
     return any(s in blob for s in _REFERRAL_SIGNALS)
+
+
+def detect_growth_hypotheses(
+    meta: SessionMetadata,
+    message: str = "",
+    history: list[str] | None = None,
+) -> list[tuple[str, str]]:
+    """Return up to 5 growth-related (id, label) hypothesis pairs."""
+    from app.advisor.orchestrator.diagnostic_trees import (
+        default_hypotheses_for_framework,
+        locate_funnel_stage,
+    )
+    from app.advisor.orchestrator.reasoning_engine import detect_business_model
+
+    business_model = detect_business_model(meta, message, history)
+    funnel = locate_funnel_stage(business_model, message, history)
+    found: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    if funnel and funnel.hypotheses:
+        for hid, label in funnel.hypotheses:
+            if hid not in seen:
+                seen.add(hid)
+                found.append((hid, label))
+
+    blob = _blob(meta, message, history or [])
+    for category, signals in _GROWTH_HYPOTHESIS_SIGNALS.items():
+        if any(s in blob for s in signals):
+            if category not in seen:
+                seen.add(category)
+                found.append((category, _GROWTH_HYPOTHESIS_LABELS.get(category, category)))
+
+    blocker = infer_growth_blocker(meta, message, history)
+    if blocker != "unknown" and blocker not in seen:
+        seen.add(blocker)
+        found.append((blocker, _GROWTH_HYPOTHESIS_LABELS.get(blocker, blocker)))
+
+    if len(found) < 3:
+        defaults = default_hypotheses_for_framework(
+            business_model if business_model != "unknown" else "local_retail"
+        )
+        for hid, label in defaults:
+            if hid not in seen:
+                seen.add(hid)
+                found.append((hid, label))
+
+    return found[:5]
+
+
+def growth_diagnostic_question(
+    meta: SessionMetadata,
+    message: str = "",
+    history: list[str] | None = None,
+) -> str:
+    """Comparative question across top growth hypotheses."""
+    from app.advisor.orchestrator.reasoning_engine import (
+        detect_business_model,
+        rank_hypotheses,
+        select_differentiating_question,
+    )
+
+    pairs = detect_growth_hypotheses(meta, message, history)
+    if not pairs:
+        return diagnostic_question(meta, message, history)
+
+    ranked = rank_hypotheses(pairs, message, history)
+    framework = detect_business_model(meta, message, history)
+    custom = select_differentiating_question(ranked, framework)
+    if custom:
+        return custom
+
+    labels = [label.split("—")[0].strip() for _, label in pairs[:3]]
+    label = business_label(meta)
+    if len(labels) >= 3:
+        return (
+            f"To narrow this down for {label} — is it more about {labels[0]}, "
+            f"{labels[1]}, or {labels[2]}?"
+        )
+    if len(labels) == 2:
+        return f"For {label}, is it more about {labels[0]} or {labels[1]}?"
+    return diagnostic_question(meta, message, history)
 
 
 def infer_growth_blocker(
@@ -243,15 +348,25 @@ def build_diagnosis_block(
     message: str = "",
     history: list[str] | None = None,
 ) -> str:
+    from app.advisor.orchestrator.diagnostic_validation import no_solutions_clause
+    from app.advisor.orchestrator.reasoning_engine import rank_hypotheses
+
     insight = strategic_insight(meta, message, history)
-    diag_q = diagnostic_question(meta, message, history)
-    blocker = infer_growth_blocker(meta, message, history)
+    diag_q = growth_diagnostic_question(meta, message, history)
+    pairs = detect_growth_hypotheses(meta, message, history)
+    ranked = rank_hypotheses(pairs, message, history)
     rag_line = rag_industry_guidance_line(meta)
+
+    hypo_lines = [
+        f"  - {h.label} (~{int(h.confidence * 100)}%)"
+        for h in ranked[:5]
+    ]
+    hypo_block = "\n".join(hypo_lines) if hypo_lines else "  - discovery, conversion, retention (unconfirmed)"
 
     prescribe_note = ""
     if has_referral_traffic(meta, message, history) and not channels_underperforming(message, history):
         prescribe_note = (
-            "6. Do NOT list generic tactics (GBP, Instagram, SEO) as prescriptions yet — "
+            "7. Do NOT list generic tactics (GBP, Instagram, SEO) as prescriptions yet — "
             "state inference first, then ask the diagnostic question.\n"
         )
 
@@ -259,11 +374,13 @@ def build_diagnosis_block(
         f"\n\nSTRATEGIC DIAGNOSIS REQUIRED (before any tactics):\n"
         f"1. State your inference aloud (what's working vs what's not).\n"
         f"{insight}\n"
-        f"2. Growth blocker hypothesis: {blocker}.\n"
+        f"2. List 3–5 plausible hypotheses (ranked, unconfirmed):\n"
+        f"{hypo_block}\n"
         f"3. Do NOT recommend setting up channels the user already has.\n"
         f"4. Do NOT jump to generic SEO/social tips without explaining WHY for this business.\n"
         f"5. {rag_line}\n"
-        f"6. End with ONE diagnostic question:\n"
+        f"6. {no_solutions_clause()}\n"
+        f"7. End with ONE differentiating diagnostic question:\n"
         f"   \"{diag_q}\"\n"
         f"{prescribe_note}"
     )

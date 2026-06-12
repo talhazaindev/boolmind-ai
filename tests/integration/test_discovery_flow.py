@@ -65,3 +65,18 @@ def test_merge_profile_coerces_integer_qualification_score() -> None:
     merged = merge_profile_updates(meta, {"qualification_score": 8})
     assert merged.qualification_score == 8
     assert merged.product_fit_confidence == 0.0
+
+
+def test_merge_profile_persists_reasoning_fields() -> None:
+    meta = SessionMetadata()
+    merged = merge_profile_updates(
+        meta,
+        {
+            "business_model": "saas",
+            "reasoning_phase": "hypothesis_testing",
+            "funnel_stage": "conversion",
+        },
+    )
+    assert merged.business_model == "saas"
+    assert merged.reasoning_phase == "hypothesis_testing"
+    assert merged.funnel_stage == "conversion"

@@ -53,7 +53,7 @@ def test_parse_evaluation_merges_readiness() -> None:
 @pytest.mark.asyncio
 async def test_evaluate_turn_fallback_on_error() -> None:
     with patch(
-        "app.advisor.orchestrator.conversation_evaluator.get_groq_rotator"
+        "app.advisor.orchestrator.conversation_evaluator.get_chat_llm_client"
     ) as mock_rotator:
         mock_rotator.return_value.create_chat_completion = AsyncMock(
             side_effect=RuntimeError("groq down")
@@ -97,7 +97,7 @@ async def test_evaluate_turn_parses_groq_json() -> None:
         }
     )
     with patch(
-        "app.advisor.orchestrator.conversation_evaluator.get_groq_rotator"
+        "app.advisor.orchestrator.conversation_evaluator.get_chat_llm_client"
     ) as mock_rotator:
         mock_rotator.return_value.create_chat_completion = AsyncMock(return_value=payload)
         with patch(

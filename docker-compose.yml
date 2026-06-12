@@ -39,6 +39,9 @@ x-advisor-local-env: &advisor-local-env
   HF_HOME: /data/huggingface
   FIDP_OUTPUT_DIR: /data/fidp-output
   CHATTERBOX_TTS_URL: ${CHATTERBOX_TTS_URL:-http://host.docker.internal:4123}
+  LLM_PROVIDER: ollama
+  OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
+  OLLAMA_MODEL: qwen3:14b
 
 services:
   # ---------------------------------------------------------------------------

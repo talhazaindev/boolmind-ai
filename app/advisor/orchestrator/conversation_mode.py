@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.advisor.orchestrator.intent_classifier import IntentResult, classify_intent
 from app.advisor.orchestrator.diagnosis_router import should_diagnose
 from app.advisor.orchestrator.tool_gating import has_minimum_discovery_context, is_tool_allowed
-from app.advisor.types import ConversationMode, ReadinessFlags, SessionMetadata
+from app.advisor.types import ConversationMode, ReadinessFlags, ReasoningPhase, SessionMetadata
 
 _ADVISORY_INTENTS = frozenset({
     "advice_request",
@@ -23,26 +23,41 @@ def select_conversation_mode(
     deferred_tool: str | None = None,
     product_fit: str | None = None,
     history_texts: list[str] | None = None,
+    reasoning_phase: ReasoningPhase | None = None,
 ) -> ConversationMode:
     """Deterministic mode selection — no extra LLM call."""
     intent = classify_intent(message)
+    phase = reasoning_phase or meta.reasoning_phase
 
     if deferred_tool and is_tool_allowed(deferred_tool, readiness, product_fit=product_fit):
         return "deliver"
 
+    if phase in (
+        "hypothesis_generation",
+        "hypothesis_testing",
+        "convergence",
+        "strategic_insight",
+    ):
+        return "diagnose"
+
     if should_diagnose(meta, message, history_texts):
         return "diagnose"
+
+    if phase in ("solution_exploration", "boolmind_positioning"):
+        if has_minimum_discovery_context(meta):
+            return "recommend"
+        return "advise"
 
     if intent.intent in _ADVISORY_INTENTS:
         return "advise"
 
     if meta.consecutive_question_turns >= 2:
-        if has_minimum_discovery_context(meta):
+        if has_minimum_discovery_context(meta) and phase in (
+            "solution_exploration",
+            "boolmind_positioning",
+        ):
             return "recommend"
         return "advise"
-
-    if meta.message_count >= 3 and has_minimum_discovery_context(meta):
-        return "recommend"
 
     return "discover"
 

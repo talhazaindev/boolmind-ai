@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from app.advisor.ab_testing import prompt_variant_suffix
-from app.advisor.integrations.groq_llm import get_groq_rotator, _is_rate_limit_error
+from app.advisor.integrations.groq_llm import get_chat_llm_client, _is_rate_limit_error
 from app.advisor.integrations.redis_store import RedisSessionStore
 from app.advisor.orchestrator.conversation_evaluator import evaluate_turn
 from app.advisor.orchestrator.conversation_mode import (
@@ -53,12 +53,21 @@ from app.advisor.orchestrator.strategy_diagnosis import (
     detect_active_channels,
     infer_growth_blocker,
 )
+from app.advisor.orchestrator.reasoning_engine import (
+    build_reasoning_prompt_blocks,
+    mark_insight_delivered,
+    update_reasoning_state,
+)
 from app.advisor.orchestrator.response_guards import (
     asks_for_contact,
+    boolmind_guard_rewrite_instruction,
     email_guard_rewrite_instruction,
     has_repeated_content,
+    hypothesis_structure_rewrite_instruction,
     premature_solution_rewrite_instruction,
     repetition_rewrite_instruction,
+    response_contains_premature_boolmind,
+    response_missing_hypothesis_structure,
 )
 from app.advisor.orchestrator.diagnostic_validation import response_contains_premature_solutions
 from app.advisor.orchestrator.session_metadata import (
@@ -89,7 +98,7 @@ MAX_TOOL_ROUNDS = 5
 class AdvisorChatLoop:
     def __init__(self, redis: RedisSessionStore) -> None:
         self._redis = redis
-        self._groq = get_groq_rotator()
+        self._llm = get_chat_llm_client()
 
     def _previous_assistant_text(self, history: list[dict[str, Any]]) -> str:
         for msg in reversed(history):
@@ -106,7 +115,7 @@ class AdvisorChatLoop:
     ) -> AsyncIterator[str]:
         api_messages = [{"role": "system", "content": system_prompt}] + messages
         try:
-            stream = await self._groq.create_chat_stream(
+            stream = await self._llm.create_chat_stream(
                 messages=api_messages,
                 tools=None,
                 tool_choice=None,
@@ -205,6 +214,10 @@ class AdvisorChatLoop:
         if dimension != "unknown":
             updated_meta.problem_dimension = dimension
 
+        updated_meta = update_reasoning_state(
+            updated_meta, message, user_history_texts
+        )
+
         intent = classify_intent(message)
         deferred_tool = detect_deferred_deliverable_request(message)
         conversation_mode = select_conversation_mode(
@@ -214,6 +227,7 @@ class AdvisorChatLoop:
             deferred_tool=deferred_tool,
             product_fit=product_fit,
             history_texts=user_history_texts,
+            reasoning_phase=updated_meta.reasoning_phase,
         )
 
         prompt_ctx = SystemPromptContext(
@@ -241,19 +255,40 @@ class AdvisorChatLoop:
         if is_channel_prioritization(message) and updated_meta.message_count <= 1:
             system_prompt += build_opening_value_block()
 
-        if should_synthesize(updated_meta):
+        reasoning_blocks = build_reasoning_prompt_blocks(
+            updated_meta, message=message, history=user_history_texts
+        )
+        if reasoning_blocks:
+            system_prompt += reasoning_blocks
+        elif should_synthesize(updated_meta) and updated_meta.reasoning_phase == "discovery":
             system_prompt += build_synthesis_block(
                 updated_meta, message=message, history=user_history_texts
             )
 
-        if (
+        include_recommendation = (
             not is_concept_explanation(message)
             and not (is_channel_prioritization(message) and updated_meta.message_count <= 1)
             and (
-                conversation_mode in ("diagnose", "advise", "recommend")
+                updated_meta.reasoning_phase in ("solution_exploration", "boolmind_positioning")
+                or (
+                    conversation_mode == "diagnose"
+                    and not reasoning_blocks
+                    and updated_meta.reasoning_phase == "discovery"
+                )
+                or (
+                    conversation_mode in ("advise", "recommend")
+                    and updated_meta.reasoning_phase
+                    not in (
+                        "hypothesis_generation",
+                        "hypothesis_testing",
+                        "convergence",
+                        "strategic_insight",
+                    )
+                )
                 or evaluation.should_recommend
             )
-        ):
+        )
+        if include_recommendation:
             system_prompt += build_recommendation_block(
                 updated_meta,
                 conversation_mode,
@@ -308,7 +343,7 @@ class AdvisorChatLoop:
             round_text = ""
 
             try:
-                stream = await self._groq.create_chat_stream(
+                stream = await self._llm.create_chat_stream(
                     messages=api_messages,
                     tools=tools,
                     tool_choice="auto",
@@ -458,6 +493,16 @@ class AdvisorChatLoop:
         ):
             rewrite_prompt += premature_solution_rewrite_instruction()
             needs_rewrite = True
+        elif response_contains_premature_boolmind(
+            full_assistant, updated_meta.reasoning_phase
+        ):
+            rewrite_prompt += boolmind_guard_rewrite_instruction()
+            needs_rewrite = True
+        elif response_missing_hypothesis_structure(
+            full_assistant, updated_meta.reasoning_phase
+        ):
+            rewrite_prompt += hypothesis_structure_rewrite_instruction()
+            needs_rewrite = True
 
         if needs_rewrite:
             rewrite_messages = messages + [
@@ -473,6 +518,12 @@ class AdvisorChatLoop:
             else:
                 if rewritten.strip():
                     full_assistant = strip_groq_validation_errors(rewritten)
+
+        if (
+            updated_meta.reasoning_phase == "strategic_insight"
+            and full_assistant.strip()
+        ):
+            updated_meta = mark_insight_delivered(updated_meta)
 
         consecutive = update_consecutive_question_turns(
             updated_meta, full_assistant, conversation_mode

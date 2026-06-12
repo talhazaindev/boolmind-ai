@@ -58,9 +58,12 @@ mount_advisor_mcp_servers(app)
 
 @app.get("/health")
 async def health():
-    """Health check; confirms Groq is configured (does not call API)."""
+    """Health check; confirms LLM and advisor deps are configured (does not call API)."""
     return {
         "status": "ok",
+        "llm_provider": settings.llm_provider_resolved,
+        "llm_configured": settings.llm_configured,
+        "llm_model": settings.llm_model_resolved,
         "groq_configured": settings.groq_configured,
         "groq_key_pool_size": len(settings.get_groq_api_keys()),
         "advisor_tier_a_ready": settings.advisor_tier_a_ready,

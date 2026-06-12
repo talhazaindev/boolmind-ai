@@ -297,10 +297,17 @@ def build_operations_diagnosis_block(
     message: str = "",
     history: list[str] | None = None,
 ) -> str:
+    from app.advisor.orchestrator.reasoning_engine import rank_hypotheses
+
     insight = operations_strategic_insight(meta, message, history)
     tradeoff = strategic_tradeoff_insight(meta, message, history)
     diag_q = operations_diagnostic_question(meta, message, history)
-    blocker = infer_ops_bottleneck(meta, message, history)
+    ids = detect_bottleneck_hypotheses(meta, message, history)
+    pairs = [(h, _HYPOTHESIS_LABELS.get(h, h)) for h in ids]
+    ranked = rank_hypotheses(pairs, message, history)
+    hypo_lines = "\n".join(
+        f"  - {h.label} (~{int(h.confidence * 100)}%)" for h in ranked[:5]
+    )
 
     return (
         f"\n\nOPERATIONS DIAGNOSIS REQUIRED (validate before any solution):\n"
@@ -308,7 +315,8 @@ def build_operations_diagnosis_block(
         f"You are at VALIDATION — do NOT skip to solutions.\n"
         f"1. Acknowledge what's working (e.g. strong demand) before what's broken.\n"
         f"{insight}\n"
-        f"2. Bottleneck hypothesis: {blocker} (unconfirmed until user answers).\n"
+        f"2. List 3–5 bottleneck hypotheses (ranked, unconfirmed):\n"
+        f"{hypo_lines or '  - materials, approvals, capacity, scheduling'}\n"
         f"3. STRATEGIC TRADEOFF — explain aloud:\n"
         f"   {tradeoff}\n"
         f"4. {no_solutions_clause()}\n"

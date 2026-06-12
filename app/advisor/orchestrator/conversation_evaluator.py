@@ -10,7 +10,7 @@ from typing import Any
 from app.advisor.analytics.events import discovery_evaluated
 from app.advisor.config.products import products_summary_for_evaluator
 from app.advisor.constants import EVAL_TIMEOUT_MS
-from app.advisor.integrations.groq_llm import get_groq_rotator
+from app.advisor.integrations.groq_llm import get_chat_llm_client
 from app.advisor.orchestrator.custom_complexity import is_custom_complexity_confirmed
 from app.advisor.orchestrator.diagnosis_router import should_diagnose
 from app.advisor.orchestrator.goal_context import (
@@ -221,6 +221,41 @@ def _parse_evaluation(raw: str, meta: SessionMetadata) -> TurnEvaluation:
     )
 
 
+def _infer_business_model_from_profile(
+    meta: SessionMetadata,
+    updates: dict[str, str | int | float | bool | None],
+) -> str | None:
+    """Map business_type/industry text to business_model when evaluator omits it."""
+    blob = " ".join(
+        str(updates.get(k) or getattr(meta, k, "") or "")
+        for k in ("business_type", "industry", "pain_point")
+    ).lower()
+    if any(kw in blob for kw in ("saas", "software", "b2b app", "platform", "trial conversion")):
+        return "saas"
+    if any(kw in blob for kw in ("subscription", "subscriber", "recurring", "cancel after")):
+        return "subscription"
+    if any(kw in blob for kw in ("agency", "consulting", "professional service", "client project")):
+        return "service"
+    if any(kw in blob for kw in ("school", "teacher", "instructor", "enrollment", "learning center")):
+        return "education"
+    if any(kw in blob for kw in ("bakery", "restaurant", "retail store", "local shop")):
+        return "local_retail"
+    return None
+
+
+def _apply_reasoning_context(
+    evaluation: TurnEvaluation,
+    meta: SessionMetadata,
+) -> TurnEvaluation:
+    """Set business_model from evaluator or inferred business_type."""
+    if evaluation.profile_updates.get("business_model"):
+        return evaluation
+    inferred = _infer_business_model_from_profile(meta, evaluation.profile_updates)
+    if inferred:
+        evaluation.profile_updates["business_model"] = inferred
+    return evaluation
+
+
 def _apply_goal_context(
     evaluation: TurnEvaluation,
     meta: SessionMetadata,
@@ -346,6 +381,8 @@ async def evaluate_turn(
         "booking needs visitor name+email (only if mentioned).\n"
         "qualification_score: integer 1-10 only (lead quality). "
         "product_fit_confidence: float 0.0-1.0 only (never put 0.7 in qualification_score).\n"
+        "business_model in profile_updates when clear: saas, subscription, service, "
+        "education, local_retail (e.g. SaaS/software/app -> saas; school/teacher -> education).\n"
         "Never extract or store phone numbers.\n"
         'JSON schema: {"stage","profile_updates":{...},"missing_fields":[],"'
         '"next_discovery_question":"","readiness":{...},"reasoning":"",'
@@ -367,9 +404,9 @@ async def evaluate_turn(
     ]
 
     try:
-        groq = get_groq_rotator()
+        llm = get_chat_llm_client()
         raw = await asyncio.wait_for(
-            groq.create_chat_completion(
+            llm.create_chat_completion(
                 messages=messages,
                 response_format={"type": "json_object"},
                 max_tokens=512,
@@ -391,6 +428,7 @@ async def evaluate_turn(
         message=user_message,
         history_texts=history_texts,
     )
+    evaluation = _apply_reasoning_context(evaluation, profile)
 
     if not evaluation.next_discovery_question:
         evaluation.next_discovery_question = _default_evaluation(

@@ -153,6 +153,9 @@ def merge_profile_updates(
         "primary_goal",
         "growth_blocker",
         "channels_active",
+        "business_model",
+        "funnel_stage",
+        "reasoning_phase",
     }
     data = meta.model_dump()
     for key, value in updates.items():
@@ -176,6 +179,30 @@ def merge_profile_updates(
             continue
         if key == "channels_active" and isinstance(value, list):
             data[key] = [str(c) for c in value]
+            continue
+        if key == "business_model" and value in (
+            "saas",
+            "subscription",
+            "service",
+            "education",
+            "local_retail",
+            "unknown",
+        ):
+            data[key] = value
+            continue
+        if key == "reasoning_phase" and value in (
+            "discovery",
+            "hypothesis_generation",
+            "hypothesis_testing",
+            "convergence",
+            "strategic_insight",
+            "solution_exploration",
+            "boolmind_positioning",
+        ):
+            data[key] = value
+            continue
+        if key == "funnel_stage" and isinstance(value, str) and value.strip():
+            data[key] = value.strip()
             continue
         if not isinstance(value, (str, int, float)):
             continue

@@ -40,6 +40,7 @@ def test_select_recommend_after_minimum_context() -> None:
         industry="education",
         pain_point="manual enrollment",
         goals="online presence",
+        reasoning_phase="solution_exploration",
     )
     mode = select_conversation_mode(
         "Tell me more",
@@ -47,6 +48,19 @@ def test_select_recommend_after_minimum_context() -> None:
         ReadinessFlags(),
     )
     assert mode == "recommend"
+
+
+def test_early_context_does_not_force_recommend() -> None:
+    """Recommend mode requires solution_exploration phase, not message count alone."""
+    meta = SessionMetadata(
+        message_count=4,
+        industry="education",
+        pain_point="manual enrollment",
+        goals="online presence",
+        reasoning_phase="hypothesis_testing",
+    )
+    mode = select_conversation_mode("Tell me more", meta, ReadinessFlags())
+    assert mode == "diagnose"
 
 
 def test_force_advise_after_two_consecutive_questions() -> None:

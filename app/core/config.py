@@ -17,6 +17,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # LLM provider: groq (production default) | ollama (local dev)
+    llm_provider: str = "groq"
+    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_model: str = "qwen3:14b"
+    ollama_eval_model: str = ""
+
     # Groq (GROQ_API_KEY optional if GROQ_API_KEY_1…N are set)
     groq_api_key: str = ""
     groq_api_key_1: str = ""
@@ -196,12 +202,38 @@ class Settings(BaseSettings):
         return unique
 
     @property
+    def llm_provider_resolved(self) -> str:
+        return self.llm_provider.strip().lower()
+
+    @property
     def groq_eval_model_resolved(self) -> str:
         return self.groq_eval_model.strip() or self.groq_model
 
     @property
+    def ollama_eval_model_resolved(self) -> str:
+        return self.ollama_eval_model.strip() or self.ollama_model
+
+    @property
+    def llm_model_resolved(self) -> str:
+        if self.llm_provider_resolved == "ollama":
+            return self.ollama_model
+        return self.groq_model
+
+    @property
+    def llm_eval_model_resolved(self) -> str:
+        if self.llm_provider_resolved == "ollama":
+            return self.ollama_eval_model_resolved
+        return self.groq_eval_model_resolved
+
+    @property
     def groq_configured(self) -> bool:
         return len(self.get_groq_api_keys()) > 0
+
+    @property
+    def llm_configured(self) -> bool:
+        if self.llm_provider_resolved == "ollama":
+            return bool(self.ollama_base_url.strip() and self.ollama_model.strip())
+        return self.groq_configured
 
     @property
     def openai_configured(self) -> bool:
@@ -267,7 +299,7 @@ class Settings(BaseSettings):
     @property
     def advisor_tier_a_ready(self) -> bool:
         return (
-            self.groq_configured
+            self.llm_configured
             and self.embeddings_configured
             and self.pinecone_configured
             and self.redis_configured

@@ -75,13 +75,15 @@ def is_micro_budget(meta: SessionMetadata, message: str = "") -> bool:
 
 
 def should_defer_boolmind_pitch(meta: SessionMetadata) -> bool:
-    """Hold Boolmind pitch until enough context or stage maturity."""
+    """Hold Boolmind pitch until reasoning phase 7 or funnel stage maturity."""
     if meta.stage_reached in ("QUALIFY", "CAPTURE", "BOOK"):
         return False
     if meta.custom_complexity_confirmed:
         return False
-    if meta.message_count >= 5:
+    if meta.reasoning_phase == "boolmind_positioning":
         return False
+    if meta.reasoning_phase == "solution_exploration":
+        return True
     return True
 
 
