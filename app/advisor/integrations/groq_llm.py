@@ -183,6 +183,27 @@ class OllamaChatClient:
             api_key="ollama",
         )
 
+    def _ollama_extra_body(self) -> dict[str, Any] | None:
+        """Disable Qwen3 thinking mode — reasoning must not reach the user."""
+        model = settings.llm_model_resolved.lower()
+        if "qwen3" in model or "qwen2.5" in model:
+            return {"think": False}
+        return None
+
+    @staticmethod
+    def _inject_no_think(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Append /no_think to system message for Qwen thinking models."""
+        patched: list[dict[str, Any]] = []
+        for msg in messages:
+            if msg.get("role") == "system" and isinstance(msg.get("content"), str):
+                content = msg["content"]
+                if "/no_think" not in content.lower():
+                    content = f"{content}\n\n/no_think"
+                patched.append({**msg, "content": content})
+            else:
+                patched.append(msg)
+        return patched
+
     async def create_chat_stream(
         self,
         *,
@@ -192,11 +213,16 @@ class OllamaChatClient:
     ) -> Any:
         kwargs: dict[str, Any] = {
             "model": settings.llm_model_resolved,
-            "messages": messages,
+            "messages": self._inject_no_think(messages)
+            if self._ollama_extra_body()
+            else messages,
             "temperature": settings.groq_temperature,
             "max_tokens": settings.groq_max_tokens,
             "stream": True,
         }
+        extra = self._ollama_extra_body()
+        if extra is not None:
+            kwargs["extra_body"] = extra
         if tools is not None:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = tool_choice
@@ -212,13 +238,19 @@ class OllamaChatClient:
         temperature: float = 0.2,
     ) -> str:
         resolved_model = model or settings.llm_eval_model_resolved
+        api_messages = (
+            self._inject_no_think(messages) if self._ollama_extra_body() else messages
+        )
         kwargs: dict[str, Any] = {
             "model": resolved_model,
-            "messages": messages,
+            "messages": api_messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
         }
+        extra = self._ollama_extra_body()
+        if extra is not None:
+            kwargs["extra_body"] = extra
         if response_format is not None:
             kwargs["response_format"] = response_format
         response = await self._client.chat.completions.create(**kwargs)

@@ -102,6 +102,18 @@ FALLBACK_CRM_MESSAGE: Final[str] = (
 )
 
 EVAL_TIMEOUT_MS: Final[int] = 2000
+
+_EVAL_TIMEOUT_BY_PROVIDER: Final[dict[str, int]] = {
+    "groq": 2000,
+    "anthropic": 5000,
+    "openai": 5000,
+    "ollama": 60000,
+}
+
+
+def eval_timeout_ms_for_provider(provider: str) -> int:
+    """Provider-aware background eval timeout."""
+    return _EVAL_TIMEOUT_BY_PROVIDER.get(provider.strip().lower(), EVAL_TIMEOUT_MS)
 PRODUCT_FIT_CONFIDENCE_MIN: Final[float] = 0.7
 RAG_SPARSE_SCORE_THRESHOLD: Final[float] = 0.35
 
@@ -122,6 +134,29 @@ TOOL_READINESS_KEY: Final[dict[str, str]] = {
 }
 
 ALWAYS_AVAILABLE_TOOLS: Final[frozenset[str]] = frozenset({"rag_query", "product_compare"})
+
+SELF_GROUNDING_TOOLS: Final[frozenset[str]] = frozenset({
+    "product_compare",
+    "generate_architecture_proposal",
+})
+
+RAG_TOOLS: Final[frozenset[str]] = frozenset({"rag_query", "product_compare"})
+
+DELIVERABLE_TOOLS: Final[frozenset[str]] = frozenset({
+    "generate_architecture_proposal",
+    "generate_fidp",
+    "product_tour",
+    "crm_create_lead",
+    "calendar_get_slots",
+    "calendar_book_slot",
+    "send_meeting_invite",
+})
+
+ROUTING_CONFIDENCE_DISCOVERY_THRESHOLD: Final[float] = 0.60
+TOOL_CONFIDENCE_THRESHOLD: Final[float] = 0.75
+DIAGNOSIS_CONFIDENCE_THRESHOLD: Final[float] = 0.75
+
+RAG_SOFT_TIMEOUT_MS: Final[int] = 800
 
 # Internal LLM note when RAG has no excerpt — must never be quoted verbatim to users.
 RAG_SPARSE_INTERNAL_NOTE: Final[str] = (

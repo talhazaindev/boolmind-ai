@@ -5,7 +5,7 @@ from app.advisor.rag.namespaces import resolve_namespace
 
 def test_resolve_custom_solutions() -> None:
     ns = resolve_namespace("auto", None, product_fit="custom_solutions")
-    assert ns == ["capabilities", "general"]
+    assert ns == ["capabilities", "business_intelligence", "general"]
 
 
 def test_resolve_forecasting() -> None:

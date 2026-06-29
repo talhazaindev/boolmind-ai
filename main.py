@@ -56,6 +56,16 @@ app.include_router(voice_ws.router)
 mount_advisor_mcp_servers(app)
 
 
+@app.get("/metrics")
+async def metrics():
+    """Prometheus scrape endpoint."""
+    from fastapi.responses import Response
+
+    from app.advisor.monitoring.prometheus_metrics import metrics_payload
+
+    return Response(content=metrics_payload(), media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
 @app.get("/health")
 async def health():
     """Health check; confirms LLM and advisor deps are configured (does not call API)."""
@@ -111,9 +121,32 @@ if frontend_dir.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
 
 
+@app.on_event("shutdown")
+async def shutdown():
+    if settings.posthog_configured:
+        try:
+            from app.advisor.analytics import events as analytics
+
+            client = analytics._client()
+            if client is not None:
+                client.shutdown()
+                logger.info("PostHog client shutdown")
+        except Exception as e:
+            logger.debug("PostHog shutdown skipped: %s", e)
+
+
 @app.on_event("startup")
 async def startup():
     logger.info("Starting %s", settings.app_name)
+    if settings.embedding_provider.strip().lower() == "local":
+        import asyncio
+
+        from app.advisor.rag.embed import warmup_embedding_model
+
+        try:
+            await asyncio.get_running_loop().run_in_executor(None, warmup_embedding_model)
+        except Exception as e:
+            logger.warning("Embedding warmup skipped: %s", e)
     if settings.image_gen_provider.strip().lower() == "local":
         if settings.local_image_gen_ready:
             logger.info(

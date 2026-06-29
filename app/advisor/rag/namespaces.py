@@ -10,9 +10,12 @@ from app.advisor.config.products import (
     compare_product_ids,
 )
 
+CASE_EVIDENCE_NAMESPACE: Final[str] = "case_evidence"
+
 NAMESPACES: Final[list[str]] = [
     *catalog_product_ids(),
     "capabilities",
+    "business_intelligence",
     "general",
     "architecture",
 ]
@@ -31,13 +34,16 @@ def resolve_namespace(
     if namespace_arg == "capabilities":
         return ["capabilities"]
 
+    if namespace_arg == "business_intelligence":
+        return ["business_intelligence"]
+
     if namespace_arg == "all":
         return [*compare_product_ids(), "general"]
 
     if namespace_arg == "auto":
         fit = product_fit or active_product
         if fit == "custom_solutions":
-            return ["capabilities", "general"]
+            return ["capabilities", "business_intelligence", "general"]
         if fit and fit in PRODUCT_TO_NAMESPACE:
             return [PRODUCT_TO_NAMESPACE[fit]]
         if active_product and active_product in PRODUCT_TO_NAMESPACE:

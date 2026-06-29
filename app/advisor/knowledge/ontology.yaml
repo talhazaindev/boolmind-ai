@@ -1,0 +1,503 @@
+archetypes:
+  # ── SALES & REVENUE ──────────────────────────────────────────────────────
+
+  - id: lead_leakage
+    name: "Lead Leakage"
+    symptoms:
+      - "we lose track of leads"
+      - "follow-ups fall through the cracks"
+      - "sales team doesn't know who to call"
+      - "we have enquiries but nothing converts"
+      - "leads come in but go cold"
+      - "we reply too slowly to new enquiries"
+    vertical_bias: [real_estate, services, consulting, education, healthcare]
+    scale_min: 3
+    scale_max: 200
+    root_cause: "No CRM or manual spreadsheet tracking causing lead drop-off between touchpoints"
+    it_lever: "crm_implementation"
+    boolmind_services: ["crm_customisation", "workflow_automation"]
+    discriminating_question: "When a new lead comes in today, what's the exact first thing that happens — does someone get notified automatically, or does it depend on who checks their email first?"
+    outcome_frame: "Businesses like yours in {vertical} typically recover 30-50% of leads that were previously going cold by automating follow-up sequences and centralising pipeline visibility."
+    case_hook: "A 12-person consulting firm we worked with was losing 40% of inbound leads to slow response times — automated CRM intake cut response time from 4 hours to 4 minutes."
+    priority: 1
+
+  - id: no_sales_visibility
+    name: "No Sales Pipeline Visibility"
+    symptoms:
+      - "I don't know where deals are"
+      - "my team doesn't update me on sales"
+      - "I find out a deal was lost after the fact"
+      - "no single view of our pipeline"
+      - "revenue forecasting is guesswork"
+    vertical_bias: [manufacturing, services, wholesale, technology]
+    scale_min: 5
+    scale_max: 500
+    root_cause: "Sales data scattered across email, WhatsApp, and spreadsheets with no centralised pipeline"
+    it_lever: "crm_with_reporting"
+    boolmind_services: ["crm_customisation", "data_solutions"]
+    discriminating_question: "If I asked you right now what your total pipeline value is for next month, how long would it take you to give me a number — seconds, minutes, or would you need to ask someone?"
+    outcome_frame: "A real-time sales dashboard typically gives owners like you forecasting confidence within the first week of deployment."
+    case_hook: "A wholesale distributor with 8 sales reps had zero pipeline visibility — a custom CRM dashboard cut their monthly reporting meeting from 3 hours to 20 minutes."
+    priority: 1
+
+  - id: high_cac_no_attribution
+    name: "High Customer Acquisition Cost — No Attribution"
+    symptoms:
+      - "we spend on ads but don't know what's working"
+      - "marketing feels like guesswork"
+      - "CAC keeps going up"
+      - "we can't track where customers come from"
+      - "Google Ads, Meta, but no ROI clarity"
+    vertical_bias: [retail, ecommerce, education, hospitality]
+    scale_min: 5
+    scale_max: 300
+    root_cause: "No UTM tracking, no conversion funnel analytics, and marketing data living outside any reporting system"
+    it_lever: "analytics_and_attribution"
+    boolmind_services: ["data_solutions", "web_development"]
+    discriminating_question: "When you spend on an ad campaign, do you track which specific campaign, ad set, or channel produced each paying customer — or do you only see total spend vs total revenue?"
+    outcome_frame: "Connecting your ad spend to actual revenue attribution typically reveals that 20% of campaigns drive 80% of results — allowing you to cut wasted spend immediately."
+    case_hook: "An e-commerce brand was spending equally across 4 channels — attribution tracking revealed one channel had 6× the ROI, they shifted budget and cut CAC by 38%."
+    priority: 2
+
+  # ── OPERATIONS & EFFICIENCY ───────────────────────────────────────────────
+
+  - id: manual_data_entry_tax
+    name: "Manual Data Entry Tax"
+    symptoms:
+      - "team spends all day on spreadsheets"
+      - "everything is manual"
+      - "we copy-paste between systems"
+      - "data entry mistakes keep happening"
+      - "my staff do work a computer should be doing"
+      - "we have 3 systems that don't talk to each other"
+    vertical_bias: []
+    scale_min: 3
+    scale_max: 500
+    root_cause: "Disconnected systems with no integration layer, forcing human bridges between tools"
+    it_lever: "workflow_automation_and_integration"
+    boolmind_services: ["workflow_automation", "ai_solutions", "web_development"]
+    discriminating_question: "Which single manual task, if eliminated tomorrow, would give your team the most hours back per week — and roughly how many people do it, how many times per day?"
+    outcome_frame: "Automating the top manual workflow in a business your size typically saves 8-15 hours per employee per week — that's often equivalent to hiring 1-2 additional people."
+    case_hook: "A logistics company had 4 staff manually keying delivery confirmations into 3 systems — an integration layer eliminated the task entirely, saving 120 hours/month."
+    priority: 1
+
+  - id: inventory_blindspot
+    name: "Inventory Blindspot"
+    symptoms:
+      - "we run out of stock without warning"
+      - "stockouts are hurting sales"
+      - "we overstock slow-moving items"
+      - "inventory is tracked in Excel"
+      - "supplier orders are based on gut feel"
+      - "we find out we're out of stock when a customer orders"
+    vertical_bias: [retail, ecommerce, manufacturing, wholesale, food_and_beverage]
+    scale_min: 5
+    scale_max: 500
+    root_cause: "No real-time inventory system with demand forecasting — orders driven by intuition rather than data"
+    it_lever: "inventory_management_system"
+    boolmind_services: ["web_development", "ai_solutions", "data_solutions"]
+    discriminating_question: "When you're deciding how much to reorder, are you looking at historical sales velocity, current stock levels, and lead times together — or is it more based on what the buying manager thinks you need?"
+    outcome_frame: "Inventory systems with demand forecasting reduce stockouts by 40-60% and overstock carrying costs by 20-30% in the first quarter."
+    case_hook: "A retail chain tracking inventory in Excel had a 22% stockout rate on top-selling SKUs — a custom inventory system with ML reorder triggers cut that to 4% in 3 months."
+    priority: 1
+
+  - id: dispatch_and_field_chaos
+    name: "Dispatch and Field Operations Chaos"
+    symptoms:
+      - "drivers call in for instructions"
+      - "we can't see where our field team is"
+      - "jobs get double-booked"
+      - "customers ask where their delivery is and we don't know"
+      - "paper job sheets still"
+      - "field staff waste time travelling back to the office"
+    vertical_bias: [logistics, construction, field_services, healthcare, food_and_beverage]
+    scale_min: 5
+    scale_max: 300
+    root_cause: "No mobile field operations system — dispatch and job tracking running on phone calls, paper, and WhatsApp"
+    it_lever: "field_ops_mobile_app"
+    boolmind_services: ["mobile_app_development", "web_development"]
+    discriminating_question: "Right now, if a customer calls asking where their delivery or technician is, how does your team find out — do you look at a screen, call the driver, or check a piece of paper?"
+    outcome_frame: "Mobile dispatch apps for field teams typically reduce job completion times by 25% and cut 'where are you?' calls to zero."
+    case_hook: "A 20-vehicle courier company tracked deliveries via WhatsApp — a custom mobile dispatch app eliminated driver check-in calls and gave customers real-time tracking."
+    priority: 2
+
+  - id: approval_bottleneck
+    name: "Approval Bottleneck — Everything Waits for the Owner"
+    symptoms:
+      - "everything has to come through me"
+      - "nothing moves unless I approve it"
+      - "staff are always waiting for sign-off"
+      - "I'm a bottleneck in my own business"
+      - "approvals happen over WhatsApp"
+    vertical_bias: []
+    scale_min: 5
+    scale_max: 200
+    root_cause: "No structured approval workflow — all decisions route through the owner because there's no system to delegate with visibility"
+    it_lever: "approval_workflow_automation"
+    boolmind_services: ["workflow_automation", "web_development"]
+    discriminating_question: "What's the most common approval request that comes to you — and if you were confident your team was following the right rules, would you trust a system to auto-approve it below a certain threshold?"
+    outcome_frame: "Approval workflow automation typically removes 70% of routine sign-offs from the owner's plate within the first month."
+    case_hook: "A 30-person services firm had every purchase over $100 going to the CEO via WhatsApp — a tiered approval app reduced owner interruptions by 80% in the first week."
+    priority: 2
+
+  # ── CUSTOMER EXPERIENCE & RETENTION ──────────────────────────────────────
+
+  - id: customer_churn_blindspot
+    name: "Customer Churn Blindspot"
+    symptoms:
+      - "customers leave and we don't know why"
+      - "we only hear about problems after they cancel"
+      - "no way to know who's at risk of churning"
+      - "we don't track customer health"
+      - "retention is a problem we can't see"
+    vertical_bias: [saas, subscription, education, healthcare, services]
+    scale_min: 10
+    scale_max: null
+    root_cause: "No customer health scoring or engagement tracking — churn detected reactively rather than predicted"
+    it_lever: "customer_health_ai"
+    boolmind_services: ["ai_solutions", "data_solutions", "web_development"]
+    discriminating_question: "When a customer churns, do you find out because they told you, because a payment failed, or because your team noticed they went quiet — and do you have any way to identify who's at risk before they leave?"
+    outcome_frame: "Predictive churn models typically identify 70% of at-risk customers 30+ days before they cancel, giving you an intervention window."
+    case_hook: "A SaaS company with 800 subscribers had no churn signal — an engagement-based health score model identified at-risk users 45 days out, reducing monthly churn from 6% to 2.1%."
+    priority: 1
+
+  - id: slow_customer_support
+    name: "Customer Support Bottleneck"
+    symptoms:
+      - "customers wait too long for answers"
+      - "same questions asked over and over"
+      - "support team is overwhelmed"
+      - "we miss customer messages"
+      - "WhatsApp support is out of control"
+      - "customers complain about slow response"
+    vertical_bias: [ecommerce, retail, services, healthcare, education]
+    scale_min: 3
+    scale_max: 300
+    root_cause: "No first-response automation or ticketing system — all queries handled manually at human speed"
+    it_lever: "ai_chatbot_or_helpdesk"
+    boolmind_services: ["ai_solutions", "web_development"]
+    discriminating_question: "What are the top 3 questions your support team answers every single day — and do you think a well-trained bot could answer at least 2 of those 3 without any human involvement?"
+    outcome_frame: "AI support chatbots trained on your product knowledge typically resolve 60-70% of first-contact queries without human intervention."
+    case_hook: "An e-commerce brand with 200+ daily support messages trained an AI on their FAQ and order data — bot deflection hit 65% within 2 weeks, halving the support team's volume."
+    priority: 1
+
+  - id: no_repeat_purchase_engine
+    name: "No Repeat Purchase or Retention Engine"
+    symptoms:
+      - "customers buy once and don't come back"
+      - "no email marketing"
+      - "we don't communicate with past customers"
+      - "loyalty programme is just a stamp card"
+      - "we have customer data but don't use it"
+    vertical_bias: [retail, food_and_beverage, ecommerce, hospitality]
+    scale_min: 3
+    scale_max: 500
+    root_cause: "No post-sale engagement system — customer lifetime value capped at first transaction with no re-engagement loop"
+    it_lever: "crm_with_marketing_automation"
+    boolmind_services: ["crm_customisation", "workflow_automation", "ai_solutions"]
+    discriminating_question: "After a customer buys from you, what automatically happens — do they get an email, a message, a follow-up call — or does the relationship just end unless they come back on their own?"
+    outcome_frame: "Businesses that implement automated post-purchase sequences see a 20-35% increase in repeat purchase rate within 90 days."
+    case_hook: "A retail clothing brand with 3,000 past customers had zero re-engagement — automated SMS + email flows generated 18% repeat purchases in the first campaign month."
+    priority: 2
+
+  # ── DATA & REPORTING ──────────────────────────────────────────────────────
+
+  - id: excel_reporting_tax
+    name: "Excel Reporting Tax"
+    symptoms:
+      - "we build reports manually every week"
+      - "Monday morning report takes 3 hours"
+      - "numbers are always slightly different depending on who runs the report"
+      - "I wait until Friday to know how last week went"
+      - "finance lives in spreadsheets"
+      - "I can't see live business performance"
+    vertical_bias: []
+    scale_min: 5
+    scale_max: 1000
+    root_cause: "No business intelligence layer — reporting is a manual assembly job rather than a live dashboard"
+    it_lever: "bi_dashboard"
+    boolmind_services: ["data_solutions", "web_development"]
+    discriminating_question: "If you could see one single number or chart that told you instantly how your business is performing right now, what would it be — revenue today, orders in pipeline, margin by product, or something else?"
+    outcome_frame: "A live BI dashboard typically eliminates 80% of manual reporting work and gives owners real-time visibility they previously had to wait a week for."
+    case_hook: "A manufacturing firm's ops manager spent 4 hours every Monday compiling KPIs from 5 sources — a real-time dashboard eliminated the job entirely and surfaced a production bottleneck that had been invisible."
+    priority: 1
+
+  - id: data_silo_problem
+    name: "Data Silo Problem"
+    symptoms:
+      - "our systems don't talk to each other"
+      - "sales data is in one place, finance in another"
+      - "we have the data but can't combine it"
+      - "every department has its own spreadsheet"
+      - "I can't get a single view of the business"
+    vertical_bias: []
+    scale_min: 10
+    scale_max: null
+    root_cause: "No data integration layer — each business function maintains isolated records with no single source of truth"
+    it_lever: "data_pipeline_and_warehouse"
+    boolmind_services: ["data_solutions", "workflow_automation"]
+    discriminating_question: "If you needed to answer 'what was our profit margin by product line last month', how many different systems or people would you need to gather that from — and how long would it take?"
+    outcome_frame: "A unified data pipeline typically reduces cross-functional reporting time from days to minutes and surfaces insights that were previously invisible in siloed systems."
+    case_hook: "A 60-person company had sales in Salesforce, finance in QuickBooks, and ops in spreadsheets — a data warehouse connector gave them a unified P&L view within 6 weeks."
+    priority: 2
+
+  # ── DIGITAL PRESENCE & ACQUISITION ───────────────────────────────────────
+
+  - id: invisible_online
+    name: "Invisible Online — No Digital Lead Generation"
+    symptoms:
+      - "we don't have a proper website"
+      - "our website is old and doesn't generate leads"
+      - "nobody finds us online"
+      - "all business comes from referrals and that's drying up"
+      - "we don't show up on Google"
+      - "the website is just a brochure with no enquiry form"
+    vertical_bias: [services, consulting, healthcare, education, construction]
+    scale_min: 1
+    scale_max: 200
+    root_cause: "No SEO-optimised web presence with conversion architecture — digital channel is decorative rather than a revenue driver"
+    it_lever: "lead_gen_website"
+    boolmind_services: ["web_development"]
+    discriminating_question: "When someone Googles the service you provide in your city, do you appear on the first page — and when they land on your site, is there a clear path for them to book, enquire, or start a conversation?"
+    outcome_frame: "A properly built service business website with SEO and conversion optimisation typically generates its first organic leads within 60-90 days."
+    case_hook: "A specialist clinic had a 5-year-old website with no contact form — a rebuilt site with local SEO generated 40 qualified enquiries in the first month."
+    priority: 2
+
+  - id: ecommerce_not_scaling
+    name: "E-Commerce Not Scaling"
+    symptoms:
+      - "online store is slow"
+      - "checkout abandonment is high"
+      - "we can't add features to our store"
+      - "Shopify is too limiting for what we need"
+      - "mobile experience is bad"
+      - "custom product configuration isn't possible"
+    vertical_bias: [ecommerce, retail, manufacturing]
+    scale_min: 5
+    scale_max: null
+    root_cause: "Off-the-shelf platform hitting limitations — custom business logic, performance, or integration needs outgrown template solutions"
+    it_lever: "custom_ecommerce_platform"
+    boolmind_services: ["web_development", "mobile_app_development"]
+    discriminating_question: "What's the single most important feature your current online store can't do that you believe is costing you sales — custom product builds, B2B pricing tiers, regional restrictions, or something else?"
+    outcome_frame: "Custom e-commerce platforms built for specific business logic typically see 15-30% improvement in conversion rate from removing friction the template platform imposed."
+    case_hook: "A B2B wholesaler couldn't offer tiered pricing on Shopify — a custom platform with client-specific pricing catalogs increased average order value by 28%."
+    priority: 2
+
+  # ── HR, COMPLIANCE & INTERNAL OPERATIONS ─────────────────────────────────
+
+  - id: onboarding_is_a_person
+    name: "Onboarding Is a Person, Not a Process"
+    symptoms:
+      - "training new staff takes months"
+      - "onboarding depends on who trains the new hire"
+      - "we lose institutional knowledge when staff leave"
+      - "no documented processes"
+      - "I spend all my time training new hires"
+    vertical_bias: []
+    scale_min: 5
+    scale_max: 300
+    root_cause: "Knowledge lives in people's heads — no systemised onboarding or knowledge base"
+    it_lever: "internal_knowledge_base_and_lms"
+    boolmind_services: ["web_development", "ai_solutions"]
+    discriminating_question: "If your top-performing employee left tomorrow, what percentage of their knowledge exists somewhere other than in their head — written down, recorded, or in a system?"
+    outcome_frame: "An internal knowledge base with AI search cuts new hire onboarding time by 40-60% and creates institutional resilience against staff turnover."
+    case_hook: "A 45-person services firm lost its operations manager and spent 6 months recovering lost process knowledge — an AI-powered internal wiki now ensures zero knowledge loss on departure."
+    priority: 2
+
+  - id: compliance_is_manual
+    name: "Compliance and Document Management Is Manual"
+    symptoms:
+      - "compliance paperwork is a nightmare"
+      - "we track certifications in spreadsheets"
+      - "documents expire and we don't know"
+      - "audit preparation takes weeks"
+      - "version control is a mess"
+    vertical_bias: [healthcare, construction, manufacturing, legal, finance]
+    scale_min: 5
+    scale_max: null
+    root_cause: "No document management system with expiry tracking and audit trail — compliance is a reactive, manual burden"
+    it_lever: "document_management_system"
+    boolmind_services: ["web_development", "workflow_automation", "ai_solutions"]
+    discriminating_question: "How do you currently know when a staff certification, insurance policy, or regulatory document is about to expire — does a system alert you, or does someone have to remember to check?"
+    outcome_frame: "Automated compliance document systems with expiry alerts reduce audit preparation time from weeks to hours and eliminate the risk of operating with lapsed certifications."
+    case_hook: "A construction company managing 200 staff certifications in Excel let 3 safety licenses lapse — an automated tracking system now sends 90/30/7-day expiry alerts and stores all documents with version history."
+    priority: 2
+
+  # ── AI & INTELLIGENCE ─────────────────────────────────────────────────────
+
+  - id: decisions_made_on_gut
+    name: "Decisions Made on Gut Feel, Not Data"
+    symptoms:
+      - "I just go with my gut"
+      - "we don't have data to back decisions"
+      - "I'm not sure if we should expand or not"
+      - "I can't measure what's actually working"
+      - "we're flying blind"
+    vertical_bias: []
+    scale_min: 5
+    scale_max: null
+    root_cause: "No measurement infrastructure — KPIs not defined, not tracked, not connected to decisions"
+    it_lever: "kpi_tracking_and_analytics"
+    boolmind_services: ["data_solutions", "ai_solutions"]
+    discriminating_question: "What's the most important business decision you've made in the last 6 months — and looking back, did you make it based on data you had in front of you, or based on experience and instinct?"
+    outcome_frame: "Businesses that instrument their key decisions with real data typically improve decision accuracy within 2 quarters and reduce the cost of reversing bad calls."
+    case_hook: "A restaurant group was opening new locations based on owner intuition — a location analytics model incorporating foot traffic, competition density, and demographic data made expansion decisions defensible and increased new-location success rate."
+    priority: 2
+
+  - id: document_processing_bottleneck
+    name: "Document Processing Bottleneck"
+    symptoms:
+      - "we manually process invoices"
+      - "data extraction from PDFs is a staff job"
+      - "forms come in on paper and get re-typed"
+      - "contracts take forever to review"
+      - "we process hundreds of documents manually"
+    vertical_bias: [legal, finance, healthcare, logistics, real_estate]
+    scale_min: 5
+    scale_max: null
+    root_cause: "No document intelligence layer — humans act as OCR and data extraction engines for structured and semi-structured documents"
+    it_lever: "document_ai"
+    boolmind_services: ["ai_solutions", "workflow_automation"]
+    discriminating_question: "What type of document does your team spend the most time manually reading and extracting data from — invoices, contracts, application forms, patient records, or something else — and roughly how many per day?"
+    outcome_frame: "Document AI solutions typically process 10× more documents per hour than human staff at 95%+ accuracy, and the extracted data flows directly into your systems."
+    case_hook: "A logistics company's accounts payable team processed 150 supplier invoices daily by hand — an invoice AI cut processing time from 4 minutes to 8 seconds per invoice and eliminated data entry errors."
+    priority: 2
+
+  - id: ai_opportunity_unclear
+    name: "AI Opportunity — Business Knows It Needs AI, Doesn't Know Where"
+    symptoms:
+      - "I know AI is important but don't know where to start"
+      - "we want to use AI but don't know how"
+      - "everyone is talking about AI, how does it apply to us"
+      - "is AI even relevant for a business like ours"
+    vertical_bias: []
+    scale_min: 1
+    scale_max: null
+    root_cause: "No AI readiness assessment or prioritised use case map — AI is perceived as a category rather than a set of specific, measurable interventions"
+    it_lever: "ai_strategy_and_use_case_mapping"
+    boolmind_services: ["ai_solutions", "data_solutions", "workflow_automation"]
+    discriminating_question: "If you had to pick one task your team does repeatedly that you think a machine could do just as well — not better, just as well — what would it be?"
+    outcome_frame: "Most businesses at your stage have 3-5 AI use cases that would pay back within 90 days — the challenge is picking the right first one, not finding them."
+    case_hook: "A healthcare clinic CEO said 'we don't know where AI fits for us' — an AI opportunity audit identified appointment scheduling optimisation and patient document extraction as the top two use cases, both implemented within 10 weeks."
+    priority: 1
+
+  # ── SCALE & GROWTH INFRASTRUCTURE ────────────────────────────────────────
+
+  - id: systems_dont_scale
+    name: "Systems That Were Fine at 10 People Are Breaking at 50"
+    symptoms:
+      - "we've grown but our systems haven't"
+      - "what worked when we were small doesn't work now"
+      - "Excel was fine but now it's a problem"
+      - "more staff means more chaos"
+      - "we've outgrown our software"
+    vertical_bias: []
+    scale_min: 20
+    scale_max: null
+    root_cause: "Systems designed for the business's previous scale — tooling debt accumulating as headcount/volume grows"
+    it_lever: "systems_modernisation"
+    boolmind_services: ["web_development", "data_solutions", "workflow_automation"]
+    discriminating_question: "What's the system or process that's causing the most friction at your current size — the one that would have been fine at half the team but is now a daily source of problems?"
+    outcome_frame: "Modernising the top 2-3 legacy processes typically unlocks the next growth phase without proportional headcount increases."
+    case_hook: "A 60-person logistics company was running dispatch on the same WhatsApp group they used at 8 people — a custom dispatch platform handled 4× the volume with the same team size."
+    priority: 2
+
+  - id: founder_dependency
+    name: "Business Is Dependent on the Founder"
+    symptoms:
+      - "the business can't run without me"
+      - "I take a week off and things fall apart"
+      - "everything important goes through me"
+      - "I can't step back because no systems exist"
+      - "I want to exit but there's nothing to hand over"
+    vertical_bias: []
+    scale_min: 3
+    scale_max: 100
+    root_cause: "Business logic, relationships, and decision-making centralised in the founder with no documentation, delegation system, or automation"
+    it_lever: "process_systemisation"
+    boolmind_services: ["workflow_automation", "web_development", "ai_solutions"]
+    discriminating_question: "If you had to take 30 days completely off-grid, which single system failure would happen first — and is that because there's no person to do it, or no system to track it?"
+    outcome_frame: "Systemising founder-dependent operations typically reduces the founder's required working hours by 30-40% within 6 months and dramatically increases business valuation."
+    case_hook: "A founder running a 25-person agency personally approved every client deliverable — a tiered approval system with clear quality checklists reduced his involvement from 40 decisions/day to 6."
+    priority: 2
+
+  - id: b2b_proposal_is_slow
+    name: "B2B Proposals and Quoting Are Too Slow"
+    symptoms:
+      - "proposals take us 3 days to put together"
+      - "we lose deals because quoting is slow"
+      - "custom quotes require sales manager involvement every time"
+      - "our proposal template is a Word doc from 2019"
+      - "clients say our proposals look unprofessional"
+    vertical_bias: [services, consulting, manufacturing, construction, technology]
+    scale_min: 3
+    scale_max: 300
+    root_cause: "No automated proposal or quoting system — every proposal built from scratch requiring senior time"
+    it_lever: "proposal_automation"
+    boolmind_services: ["web_development", "workflow_automation", "ai_solutions"]
+    discriminating_question: "How long does it take your team to put together a proposal for a typical new client — and what's the actual manual work involved, or is it mostly waiting for the right person to have time to do it?"
+    outcome_frame: "Automated proposal systems cut proposal turnaround from days to hours and typically increase win rates by 15-25% through faster response and more professional presentation."
+    case_hook: "A managed IT services company took 3 days to quote due to manual effort — a CPQ (configure-price-quote) web tool cut turnaround to 2 hours and increased their won-proposal rate by 22%."
+    priority: 2
+
+  # ── ADDITIONAL PATTERNS (invented to reach 25) ───────────────────────────
+
+  - id: scheduling_bottleneck
+    name: "Appointment & Scheduling Bottleneck"
+    symptoms:
+      - "patients call to book and we miss them"
+      - "double bookings happen every week"
+      - "scheduling is done over the phone"
+      - "no online booking on our website"
+      - "staff spend hours coordinating appointments"
+      - "no-shows cost us thousands every month"
+    vertical_bias: [healthcare, services, education, hospitality]
+    scale_min: 3
+    scale_max: 200
+    root_cause: "No online scheduling system with automated reminders — appointments managed manually via phone, email, or paper diary"
+    it_lever: "online_scheduling_system"
+    boolmind_services: ["web_development", "mobile_app_development", "workflow_automation"]
+    discriminating_question: "When someone wants to book with you, can they do it online at 10pm on a Sunday — or do they have to call during business hours and hope someone answers?"
+    outcome_frame: "Online scheduling with automated reminders typically reduces no-shows by 30-50% and frees staff from phone-based booking in {vertical} businesses."
+    case_hook: "A dental practice with 4 chairs lost 18% of appointments to no-shows — online booking with SMS reminders cut no-shows to 6% and eliminated 2 hours of daily phone scheduling."
+    priority: 2
+
+  - id: ar_collection_drag
+    name: "Accounts Receivable & Late Payment Drag"
+    symptoms:
+      - "clients pay late every month"
+      - "chasing invoices takes hours"
+      - "cash flow is unpredictable"
+      - "we send invoices manually"
+      - "no automated payment reminders"
+      - "days sales outstanding keeps climbing"
+    vertical_bias: [services, manufacturing, wholesale, consulting]
+    scale_min: 5
+    scale_max: 500
+    root_cause: "No automated invoicing and collections workflow — AR managed manually with inconsistent follow-up"
+    it_lever: "ar_automation_and_collections"
+    boolmind_services: ["workflow_automation", "data_solutions", "ai_solutions"]
+    discriminating_question: "When an invoice goes past due, what happens — does a system automatically send reminders and escalate, or does someone have to remember to chase it?"
+    outcome_frame: "Automated AR workflows typically reduce average days-to-payment by 15-25 days and cut collections admin time by 70% for {vertical} businesses."
+    case_hook: "A 35-person consulting firm had 45-day average payment cycles — automated invoicing with tiered reminders brought average collection to 22 days without damaging client relationships."
+    priority: 2
+
+  - id: multi_location_fragmentation
+    name: "Multi-Location Operational Fragmentation"
+    symptoms:
+      - "each location runs differently"
+      - "we can't compare performance across sites"
+      - "head office has no visibility into branches"
+      - "inventory differs at every location"
+      - "staff at one site don't know what others are doing"
+      - "opening a new location is chaos every time"
+    vertical_bias: [retail, hospitality, healthcare, food_and_beverage]
+    scale_min: 10
+    scale_max: null
+    root_cause: "No unified multi-site operations platform — each location operates as an island with local spreadsheets and processes"
+    it_lever: "multi_site_ops_platform"
+    boolmind_services: ["data_solutions", "web_development", "workflow_automation"]
+    discriminating_question: "If I asked you which of your locations is most profitable right now, could you answer today — or would you need to wait for each site manager to send their numbers?"
+    outcome_frame: "A unified multi-site dashboard typically surfaces underperforming locations within the first month and standardises operations across {vertical} businesses with 3+ sites."
+    case_hook: "A restaurant group with 8 locations had no cross-site visibility — a centralised ops platform revealed two sites running 12% below food-cost targets, saving $180K annually after corrective action."
+    priority: 2

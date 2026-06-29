@@ -111,6 +111,9 @@ class Settings(BaseSettings):
 
     sentry_dsn: str = ""
 
+    # Advisor — telemetry
+    telemetry_json_logs: bool = False
+
     # Advisor — FIDP image generation (Tier D)
     replicate_api_token: str = ""
     image_gen_provider: str = "mock"  # mock | replicate | local
@@ -295,6 +298,16 @@ class Settings(BaseSettings):
     @property
     def replicate_configured(self) -> bool:
         return bool(self.replicate_api_token)
+
+    @property
+    def telemetry_enabled(self) -> bool:
+        return (
+            self.supabase_configured
+            or self.posthog_configured
+            or self.sentry_configured
+            or self.telemetry_json_logs
+            or self.debug
+        )
 
     @property
     def advisor_tier_a_ready(self) -> bool:

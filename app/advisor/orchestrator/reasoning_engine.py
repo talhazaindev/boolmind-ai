@@ -425,15 +425,6 @@ def select_differentiating_question(
         custom = differentiating_question(framework, [active[0].id, active[1].id])
         if custom:
             return custom
-        return (
-            f"To narrow this down - is it more likely {active[0].label.split('—')[0].strip()}, "
-            f"or {active[1].label.split('—')[0].strip()}?"
-        )
-    if len(active) == 1:
-        return (
-            f"What evidence would help confirm whether {active[0].label.split('—')[0].strip()} "
-            f"is the main driver?"
-        )
     return "What changed most recently that might explain this pattern?"
 
 

@@ -9,7 +9,8 @@ from typing import Any
 
 from app.advisor.analytics.events import discovery_evaluated
 from app.advisor.config.products import products_summary_for_evaluator
-from app.advisor.constants import EVAL_TIMEOUT_MS
+from app.advisor.constants import eval_timeout_ms_for_provider
+from app.core.config import settings
 from app.advisor.integrations.groq_llm import get_chat_llm_client
 from app.advisor.orchestrator.custom_complexity import is_custom_complexity_confirmed
 from app.advisor.orchestrator.diagnosis_router import should_diagnose
@@ -411,11 +412,18 @@ async def evaluate_turn(
                 response_format={"type": "json_object"},
                 max_tokens=512,
             ),
-            timeout=EVAL_TIMEOUT_MS / 1000.0,
+            timeout=eval_timeout_ms_for_provider(settings.llm_provider_resolved) / 1000.0,
         )
         evaluation = _parse_evaluation(raw, profile)
     except Exception as e:
         logger.warning("evaluate_turn failed: %s", e)
+        from app.advisor.monitoring.telemetry import emit
+
+        await emit(
+            "evaluator_fallback",
+            session_id,
+            metadata={"error_class": type(e).__name__},
+        )
         history_texts = _history_user_texts(history)
         evaluation = _default_evaluation(
             profile, message=user_message, history_texts=history_texts

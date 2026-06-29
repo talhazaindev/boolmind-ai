@@ -24,6 +24,7 @@ NAMESPACE_MAP = {
     "legal": "products/legal",
     "forecasting": "products/forecasting",
     "capabilities": "capabilities",
+    "business_intelligence": "business-intelligence",
     "general": "general",
     "architecture": "architecture-mappings",
 }
@@ -90,7 +91,7 @@ def main() -> int:
     parser.add_argument(
         "--namespace",
         default="retify",
-        help="Namespace to ingest (retify, ecg, legal, general, all)",
+        help="Namespace to ingest (retify, ecg, legal, business_intelligence, general, all)",
     )
     parser.add_argument(
         "--source",

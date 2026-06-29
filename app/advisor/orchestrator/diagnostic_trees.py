@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
+import re
+
+from typing import Final, NamedTuple
 
 FRAMEWORKS: dict[str, list[str]] = {
     "saas": [
@@ -294,3 +296,169 @@ def differentiating_question(
         return questions[key]
     key_rev = f"{hypothesis_ids[1]}|{hypothesis_ids[0]}"
     return questions.get(key_rev)
+
+
+# --- Universal workflow model (industry-agnostic ops) ---
+
+UNIVERSAL_STAGES: Final[tuple[str, ...]] = (
+    "intake",
+    "preparation",
+    "execution",
+    "quality_gate",
+    "delivery",
+    "exception_loop",
+)
+
+_UNIVERSAL_STAGE_SIGNALS: Final[dict[str, tuple[str, ...]]] = {
+    "intake": (
+        "intake", "application received", "order received", "signup", "lead",
+        "trial", "request submitted",
+    ),
+    "preparation": (
+        "gather document", "verify", "plan route", "assign driver", "onboarding",
+        "setup", "spreadsheet", "data entry", "collect",
+    ),
+    "execution": (
+        "underwriting", "analysis", "dispatch", "processing", "transit",
+        "analyst", "production", "fulfillment",
+    ),
+    "quality_gate": (
+        "compliance", "review queue", "qc", "inspection", "audit",
+        "approval team", "manual review",
+    ),
+    "delivery": (
+        "approval decision", "customer delivery", "value realized",
+        "close", "ship complete",
+    ),
+    "exception_loop": (
+        "exception", "rework", "went back", "missing doc", "revert",
+        "manual intervention", "edge case",
+    ),
+}
+
+_OPS_HYPOTHESES: Final[dict[str, tuple[str, str]]] = {
+    "queue_saturation": "queue saturation — volume exceeds review capacity",
+    "exception_handling_gap": "exception handling gap — automation misses edge cases",
+    "manual_handoff": "manual handoff — teams coordinate outside systems",
+    "capacity_ceiling": "capacity ceiling — headcount cannot match volume",
+    "data_reentry": "data re-entry — same facts entered in multiple systems",
+    "prioritization_gap": "prioritization gap — no rules for queue ordering",
+    "ocr_accuracy": "extraction accuracy — standard documents misread",
+}
+
+_OPS_DIFFERENTIATING: Final[dict[str, str]] = {
+    "queue_saturation|exception_handling_gap": (
+        "Is the delay mostly queue volume waiting for review, or rework caused by "
+        "exceptions that automation missed?"
+    ),
+    "exception_handling_gap|ocr_accuracy": (
+        "When automation failed, was it mostly unusual document types, or standard "
+        "statements the system misread?"
+    ),
+    "queue_saturation|prioritization_gap": (
+        "Is the backlog growing because review capacity is too low, or because "
+        "applications aren't being prioritized effectively?"
+    ),
+    "manual_handoff|capacity_ceiling": (
+        "Is the bottleneck more about too many manual handoffs between teams, "
+        "or simply not enough people at the critical step?"
+    ),
+    "manual_handoff|prioritization_gap": (
+        "Is the delay mostly from handoffs between teams, or from unclear rules "
+        "about which applications get reviewed first?"
+    ),
+    "prioritization_gap|manual_handoff": (
+        "Is the delay mostly from handoffs between teams, or from unclear rules "
+        "about which applications get reviewed first?"
+    ),
+    "capacity_ceiling|data_reentry": (
+        "Are analysts slowed down by sheer volume, or by re-entering the same "
+        "data into multiple systems?"
+    ),
+}
+
+
+def _term_in_blob(term: str, text: str) -> bool:
+    if len(term) <= 5:
+        return bool(re.search(rf"\b{re.escape(term)}\b", text, re.I))
+    return term in text
+
+
+def locate_universal_stage(
+    graph: object,
+    blob: str,
+) -> str:
+    """Map conversation to universal workflow stage."""
+    text = blob.lower()
+    if hasattr(graph, "workflow_stages"):
+        stages = getattr(graph, "workflow_stages", {})
+        if stages.get("quality_gate") and stages["quality_gate"].confidence >= 0.7:
+            return "quality_gate"
+        if stages.get("exception_loop") and stages["exception_loop"].confidence >= 0.7:
+            return "exception_loop"
+    best = "unknown"
+    best_score = 0
+    for stage in UNIVERSAL_STAGES:
+        signals = _UNIVERSAL_STAGE_SIGNALS.get(stage, ())
+        score = sum(1 for s in signals if _term_in_blob(s, text))
+        if score > best_score:
+            best_score = score
+            best = stage
+    return best if best_score >= 2 else "unknown"
+
+
+def rank_ops_hypotheses(
+    graph: object,
+    snapshot: object,
+) -> list[tuple[str, str, float]]:
+    """Return (id, label, confidence) for ops throughput hypotheses."""
+    blob = ""
+    if hasattr(graph, "pain_points"):
+        blob += " ".join(getattr(graph, "pain_points", []))
+    if hasattr(graph, "metrics"):
+        blob += " " + " ".join(getattr(graph, "metrics", {}).keys())
+    if hasattr(snapshot, "confirmed_facts"):
+        blob += " " + " ".join(getattr(snapshot, "confirmed_facts", []))
+    blob = blob.lower()
+
+    scores: dict[str, float] = {}
+    if "backlog" in blob or "queue" in blob:
+        scores["queue_saturation"] = 0.72
+    if any(p in blob for p in ("exception", "went back", "poor adoption")):
+        scores["exception_handling_gap"] = 0.68
+    if "manual" in blob and ("handoff" in blob or "email" in blob or "team" in blob):
+        scores["manual_handoff"] = 0.65
+    if "analyst" in blob or "coordinator" in blob:
+        scores["capacity_ceiling"] = 0.6
+    if "enter data" in blob or "re-enter" in blob or "origination system" in blob:
+        scores["data_reentry"] = 0.58
+    if "compliance" in blob and "priorit" in blob:
+        scores["prioritization_gap"] = 0.7
+    if "compliance" in blob and any(
+        p in blob for p in ("risk team", "move between", "handoff", "analysts", "teams")
+    ):
+        scores["manual_handoff"] = max(scores.get("manual_handoff", 0.0), 0.58)
+    if "compliance" in blob and any(p in blob for p in ("hours", "days", "review")):
+        scores["prioritization_gap"] = max(scores.get("prioritization_gap", 0.0), 0.49)
+    if hasattr(snapshot, "confidence_scores"):
+        for hid, conf in getattr(snapshot, "confidence_scores", {}).items():
+            if hid in _OPS_HYPOTHESES:
+                scores[hid] = max(scores.get(hid, 0.0), conf)
+
+    ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return [
+        (hid, _OPS_HYPOTHESES[hid], conf)
+        for hid, conf in ranked
+        if hid in _OPS_HYPOTHESES
+    ]
+
+
+def ops_differentiating_question(hypothesis_ids: list[str]) -> str | None:
+    if len(hypothesis_ids) < 2:
+        return None
+    key = f"{hypothesis_ids[0]}|{hypothesis_ids[1]}"
+    if key in _OPS_DIFFERENTIATING:
+        return _OPS_DIFFERENTIATING[key]
+    key_rev = f"{hypothesis_ids[1]}|{hypothesis_ids[0]}"
+    return _OPS_DIFFERENTIATING.get(key_rev)
+

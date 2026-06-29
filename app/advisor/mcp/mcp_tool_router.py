@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from typing import Any
 
 from app.advisor.constants import (
@@ -12,6 +13,8 @@ from app.advisor.constants import (
     GENERIC_ERROR_MESSAGE,
     TOOL_TIMEOUT_MS,
 )
+from app.advisor.integrations.failed_operations import queue_failed_operation
+from app.advisor.monitoring.telemetry import emit
 from app.advisor.orchestrator.product_context import ProductContext
 from app.advisor.orchestrator.tools import get_tool_definitions
 from app.advisor.tools import (
@@ -44,6 +47,8 @@ TOOL_SERVER_MAP: dict[str, str] = {
     "generate_fidp": "boolmind-experience",
 }
 
+_FAILED_OPS_TOOLS = frozenset({"crm_create_lead", "calendar_book_slot", "send_meeting_invite"})
+
 
 async def _with_timeout(coro, ms: int):
     try:
@@ -68,29 +73,163 @@ class McpToolRouter:
         readiness: ReadinessFlags | None = None,
         product_fit: str | None = None,
     ) -> ToolResult:
+        server = TOOL_SERVER_MAP.get(name, "unknown")
+        product_id = product_context.active_product
+
         if readiness is not None and not is_tool_allowed(
             name, readiness, product_fit=product_fit
         ):
-            logger.info("MCP tool %s blocked by readiness gate", name)
-            return ToolResult(success=False, fallback=gated_tool_fallback(name))
+            logger.info(
+                "[advisor.tool] gated tool=%s server=%s session=%s",
+                name,
+                server,
+                session_id,
+            )
+            await emit(
+                "tool_gated",
+                session_id,
+                visitor_id=visitor_id,
+                product_id=product_id,
+                metadata={
+                    "tool": name,
+                    "server": server,
+                    "readiness": readiness.model_dump(),
+                    "outcome": "gated",
+                },
+            )
+            return ToolResult(
+                success=False,
+                fallback=gated_tool_fallback(name),
+                outcome="gated",
+            )
 
         timeout = TOOL_TIMEOUT_MS.get(name, 3000)
-        server = TOOL_SERVER_MAP.get(name, "unknown")
+        logger.info(
+            "[advisor.tool] invoking tool=%s server=%s session=%s timeout_ms=%d",
+            name,
+            server,
+            session_id,
+            timeout,
+        )
+        await emit(
+            "tool_invoked",
+            session_id,
+            visitor_id=visitor_id,
+            product_id=product_id,
+            metadata={"tool": name, "server": server, "timeout_ms": timeout},
+        )
+
+        start = time.perf_counter()
         try:
             data = await _with_timeout(
                 self._dispatch(name, arguments, product_context, session_id, visitor_id),
                 timeout,
             )
-            logger.debug("MCP tool %s via %s ok", name, server)
-            return ToolResult(success=True, data=data)
+            duration_ms = round((time.perf_counter() - start) * 1000, 1)
+            logger.info(
+                "[advisor.tool] completed tool=%s server=%s session=%s outcome=success duration_ms=%.1f",
+                name,
+                server,
+                session_id,
+                duration_ms,
+            )
+            await emit(
+                "tool_completed",
+                session_id,
+                visitor_id=visitor_id,
+                product_id=product_id,
+                metadata={
+                    "tool": name,
+                    "server": server,
+                    "duration_ms": duration_ms,
+                    "outcome": "success",
+                },
+            )
+            return ToolResult(
+                success=True,
+                data=data,
+                duration_ms=duration_ms,
+                outcome="success",
+            )
         except TimeoutError:
-            logger.warning("MCP tool %s timed out (%s)", name, server)
+            duration_ms = round((time.perf_counter() - start) * 1000, 1)
+            logger.warning(
+                "[advisor.tool] timeout tool=%s server=%s session=%s duration_ms=%.1f timeout_ms=%d",
+                name,
+                server,
+                session_id,
+                duration_ms,
+                timeout,
+            )
+            await emit(
+                "tool_timeout",
+                session_id,
+                visitor_id=visitor_id,
+                product_id=product_id,
+                metadata={
+                    "tool": name,
+                    "server": server,
+                    "duration_ms": duration_ms,
+                    "timeout_ms": timeout,
+                    "outcome": "timeout",
+                },
+            )
+            if name in _FAILED_OPS_TOOLS:
+                await queue_failed_operation(
+                    name,
+                    arguments,
+                    f"timeout after {timeout}ms",
+                    session_id=session_id,
+                )
             if name == "crm_create_lead":
-                return ToolResult(success=False, fallback=FALLBACK_CRM_MESSAGE)
-            return ToolResult(success=False, fallback=GENERIC_ERROR_MESSAGE)
+                return ToolResult(
+                    success=False,
+                    fallback=FALLBACK_CRM_MESSAGE,
+                    duration_ms=duration_ms,
+                    outcome="timeout",
+                )
+            return ToolResult(
+                success=False,
+                fallback=GENERIC_ERROR_MESSAGE,
+                duration_ms=duration_ms,
+                outcome="timeout",
+            )
         except Exception as e:
-            logger.exception("MCP tool %s failed: %s", name, e)
-            return ToolResult(success=False, fallback=GENERIC_ERROR_MESSAGE)
+            duration_ms = round((time.perf_counter() - start) * 1000, 1)
+            logger.exception(
+                "[advisor.tool] failed tool=%s server=%s session=%s duration_ms=%.1f",
+                name,
+                server,
+                session_id,
+                duration_ms,
+            )
+            await emit(
+                "tool_failed",
+                session_id,
+                visitor_id=visitor_id,
+                product_id=product_id,
+                metadata={
+                    "tool": name,
+                    "server": server,
+                    "duration_ms": duration_ms,
+                    "error_class": type(e).__name__,
+                    "outcome": "error",
+                },
+                exception=e,
+            )
+            if name in _FAILED_OPS_TOOLS:
+                await queue_failed_operation(
+                    name,
+                    arguments,
+                    str(e)[:500],
+                    session_id=session_id,
+                )
+            return ToolResult(
+                success=False,
+                fallback=GENERIC_ERROR_MESSAGE,
+                duration_ms=duration_ms,
+                outcome="error",
+            )
 
     async def _dispatch(
         self,

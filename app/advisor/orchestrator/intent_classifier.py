@@ -135,3 +135,12 @@ def is_concept_explanation(message: str) -> bool:
 
 def is_channel_prioritization(message: str) -> bool:
     return classify_intent(message).intent == "channel_prioritization"
+
+
+def intent_is_explicit_solution_request(intent: IntentResult) -> bool:
+    """User explicitly asked for a solution, recommendation, or architecture."""
+    return intent.intent in (
+        "advice_request",
+        "technical_solution_request",
+        "roi_analysis",
+    ) and intent.confidence >= CONFIDENCE_THRESHOLD

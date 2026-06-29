@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Boolmind Advisor</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -194,6 +195,40 @@
       font-size: 0.75rem;
       color: #666;
     }
+    .workflow-visual {
+      align-self: flex-start;
+      max-width: 98%;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 0.75rem;
+      background: #fff;
+    }
+    .workflow-visual h4 {
+      margin: 0 0 0.35rem;
+      font-size: 0.85rem;
+      color: #5B4FD6;
+    }
+    .workflow-visual .draft-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #8a6d00;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+    .workflow-visual .mermaid-wrap {
+      overflow-x: auto;
+      padding: 0.25rem 0;
+    }
+    .workflow-visual .visual-caption {
+      margin: 0.5rem 0 0;
+      font-size: 0.72rem;
+      color: #666;
+      line-height: 1.35;
+    }
     .proactive-toast {
       position: fixed;
       bottom: 620px;
@@ -257,6 +292,17 @@
     const productSelect = document.getElementById('productSelect');
     const clearBtn = document.getElementById('clearBtn');
 
+    if (window.mermaid) {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'neutral',
+        securityLevel: 'strict',
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+      });
+    }
+
+    let mermaidRenderSeq = 0;
+
     function pageContext() {
       const path = window.location.pathname || '/';
       const params = new URLSearchParams(window.location.search);
@@ -299,6 +345,46 @@
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return body.parentElement === div ? div : body;
+    }
+
+    function renderWorkflowVisual(evt) {
+      const mermaidSrc = evt.mermaid || '';
+      if (!mermaidSrc || !window.mermaid) return;
+      const card = document.createElement('div');
+      card.className = 'workflow-visual';
+      if (evt.isDraft !== false) {
+        const badge = document.createElement('span');
+        badge.className = 'draft-badge';
+        badge.textContent = 'Draft sketch';
+        card.appendChild(badge);
+      }
+      if (evt.title) {
+        const title = document.createElement('h4');
+        title.textContent = evt.title;
+        card.appendChild(title);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'mermaid-wrap';
+      const diagram = document.createElement('div');
+      diagram.className = 'mermaid';
+      const renderId = 'mmd-' + (++mermaidRenderSeq);
+      diagram.id = renderId;
+      wrap.appendChild(diagram);
+      card.appendChild(wrap);
+      if (evt.caption) {
+        const caption = document.createElement('p');
+        caption.className = 'visual-caption';
+        caption.textContent = evt.caption;
+        card.appendChild(caption);
+      }
+      messagesEl.appendChild(card);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      mermaid.render(renderId + '-svg', mermaidSrc).then(function(res) {
+        diagram.innerHTML = res.svg;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }).catch(function() {
+        diagram.textContent = 'Could not render workflow diagram.';
+      });
     }
 
     function renderFidp(result) {
@@ -556,6 +642,10 @@
                 typingEl.textContent = 'Searching knowledge base…';
               }
               typingEl.hidden = false;
+            } else if (evt.type === 'visual') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              renderWorkflowVisual(evt);
             } else if (evt.type === 'tool_result' && evt.tool === 'product_tour') {
               typingEl.hidden = true;
               gotAssistantText = true;

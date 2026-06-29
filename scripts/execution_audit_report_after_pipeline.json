@@ -1,0 +1,1304 @@
+[
+  {
+    "name": "logistics_bottleneck",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We run a logistics company. Orders are growing but dispatch delays are getting worse.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "timeout",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "timeout",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "We run a logistics company. Orders are growing but dispatch delays are getting worse. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "stage=DISCOVERY",
+            "should_diagnose"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category"
+          ],
+          "evidence_score": 0.5,
+          "mode_reasons": [
+            "stage=DISCOVERY",
+            "should_diagnose"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "stage=DISCOVERY",
+            "should_diagnose"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.5,
+          "routing_confidence_advisory": 0.5,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "stage=DISCOVERY",
+            "should_diagnose"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category"
+          ],
+          "required_question_key": "routing_constraints",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Observation: Orders are growing but dispatch delays are getting worse  \nEvidence: Manual planning is a confirmed bottleneck, which directly impacts dispatch efficiency as order volume increases  \nInference: The manual planning process is likely unable to scale with growing order volume, causing delays in dispatch scheduling and execution (medium confidence)\n\nWhat constraints drive planning decisions\u2014territory, vehicle capacity, SLA windows, or customer tiers?"
+      },
+      {
+        "turn": 2,
+        "message": "We dispatch around 1,500 shipments per day. Planning is done manually in spreadsheets by three coordinators. Drivers often wait 30\u201360 minutes during peak periods.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "We dispatch around 1,500 shipments per day. Planning is done manually in spreadsheets by three coordinators. Drivers oft capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "stage=HYPOTHESIS_VALIDATION",
+            "should_diagnose"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "evidence_score": 0.5,
+          "mode_reasons": [
+            "stage=HYPOTHESIS_VALIDATION",
+            "should_diagnose"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "HYPOTHESIS_VALIDATION",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "stage=HYPOTHESIS_VALIDATION",
+            "should_diagnose"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.5,
+          "routing_confidence_advisory": 0.5,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "stage=HYPOTHESIS_VALIDATION",
+            "should_diagnose"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "required_question_key": "assignment_logic",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Observation: 1,500 shipments/day with manual spreadsheet planning by three coordinators  \nEvidence: High-volume operations combined with manual planning create scalability limitations, directly correlating with driver wait times during peak periods  \nInference: The manual process lacks real-time optimization capabilities, leading to inefficient resource allocation and extended waiting times for drivers (medium confidence)  \n\nWhat constraints drive planning decisions\u2014territory, vehicle capacity, SLA windows, or customer tiers?\n\nHow do coordinators currently decide which driver receives which shipment\u2014availability, geography, vehicle type, customer priority, or another rule?"
+      },
+      {
+        "turn": 3,
+        "message": "What do you recommend?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "advice_request",
+          "intent_confidence": 0.9,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "What do you recommend? capabilities features workflow delay",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "advice_request+solutioning_blocked"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "evidence_score": 0.5,
+          "mode_reasons": [
+            "advice_request+solutioning_blocked"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "HYPOTHESIS_VALIDATION",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "advice_request+solutioning_blocked"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.5,
+          "routing_confidence_advisory": 0.5,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "advice_request+solutioning_blocked"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "required_question_key": "routing_constraints",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Observation: The user is seeking recommendations but has not provided details on planning constraints or shipment assignment rules  \nEvidence: Missing information on constraints and decision rules limits the ability to confirm the bottleneck's root cause and potential solutions  \nInference: The manual process's inefficiency is likely exacerbated by unoptimized decision rules, but without specifics, the exact impact remains uncertain (medium confidence)\n\nWhat constraints drive planning decisions\u2014territory, vehicle capacity, SLA windows, or customer tiers?"
+      },
+      {
+        "turn": 4,
+        "message": "We are a manufacturing company with 40 employees.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "discover",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "We are a manufacturing company with 40 employees. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "conflict_hold->DISCOVERY"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "evidence_score": 0.5,
+          "mode_reasons": [
+            "conflict_hold->DISCOVERY"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "DISCOVERY",
+          "mode_reasons": [
+            "conflict_hold->DISCOVERY"
+          ],
+          "conflict_hold": true,
+          "evidence_score": 0.5,
+          "routing_confidence_advisory": 0.5,
+          "readiness": {
+            "architecture": true,
+            "product_tour": false,
+            "fidp": true,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "conflict_hold->DISCOVERY"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ],
+          "required_question_key": "business_clarification",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [
+          "CONFLICT_HOLD"
+        ],
+        "assistant_text": "Earlier you described a logistics operation (scale=1,500 shipments/day, planning_tool=spreadsheets, driver_wait=30\u201360 minutes). Now you've mentioned being a manufacturing business. Are these separate business units, or should I update my understanding?"
+      }
+    ]
+  },
+  {
+    "name": "premature_solution_block",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We have operational inefficiencies and want to improve efficiency.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "skipped",
+        "quality_passed": false,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "discover",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "undecided",
+          "solution_reasons": [],
+          "rag_required": false,
+          "tool_selected": null,
+          "tool_reason": null,
+          "tool_plan_arguments": null,
+          "confidence_gates_applied": [
+            "default_discovery"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "default_discovery"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "EXPLORE",
+          "execution_mode": "DISCOVERY",
+          "mode_reasons": [
+            "default_discovery"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": null,
+          "tool_reason": null,
+          "gates_applied": [
+            "default_discovery"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ],
+          "required_question_key": "business_context",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "To better understand how we can assist, could you share the industry you're in and the specific areas where inefficiencies are most impactful (e.g., supply chain, customer service, data management)? This will help us align solutions to your unique needs.\n\nWhat does a typical workflow look like from request to delivery?"
+      },
+      {
+        "turn": 2,
+        "message": "What do you recommend we should do?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.17,
+        "rag_status": "skipped",
+        "quality_passed": false,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "advice_request",
+          "intent_confidence": 0.9,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "undecided",
+          "solution_reasons": [],
+          "rag_required": false,
+          "tool_selected": null,
+          "tool_reason": null,
+          "tool_plan_arguments": null,
+          "confidence_gates_applied": [
+            "advice_request+solutioning_blocked"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "advice_request+solutioning_blocked"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "EXPLORE",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "advice_request+solutioning_blocked"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": null,
+          "tool_reason": null,
+          "gates_applied": [
+            "advice_request+solutioning_blocked"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ],
+          "required_question_key": "scale",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Observation: The user has identified operational inefficiencies as a primary concern.  \nEvidence: Without context on industry, specific pain points, or workflows, it is impossible to align solutions to their unique needs or prioritize areas for improvement.  \nInference: The user is likely in the early stages of problem identification and requires structured guidance to define bottlenecks before actionable steps can be proposed.\n\nRoughly what volume are you handling per day or week?"
+      }
+    ]
+  },
+  {
+    "name": "product_compare",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "What's the difference between Retify and your Forecasting Engine in terms of workflow and use case?",
+        "http_status": 200,
+        "tools": [
+          "product_compare"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "product_compare",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "RAG_ONLY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "product_comparison",
+          "intent_confidence": 0.8,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "RAG_ONLY",
+          "internal_mode": "discover",
+          "catalog_product_fit": "retify",
+          "catalog_reasons": [
+            "retify"
+          ],
+          "solution_category": null,
+          "solution_reasons": [],
+          "rag_required": true,
+          "tool_selected": "product_compare",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "product_ids": [
+              "retify",
+              "forecasting"
+            ],
+            "comparison_focus": "workflow"
+          },
+          "confidence_gates_applied": [
+            "intent=product_comparison"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "catalog_product_fit"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "intent=product_comparison"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "EXPLORE",
+          "execution_mode": "RAG_ONLY",
+          "mode_reasons": [
+            "intent=product_comparison"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "product_compare",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "intent=product_comparison"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "catalog_product_fit"
+          ],
+          "required_question_key": "business_context",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Retify (Retail Data Unification) and the Forecasting Engine serve distinct but complementary roles.  \n\n**Workflow**:  \n- **Retify** is a 10-step process focused on unifying fragmented retail data (e.g., POS, e-commerce, inventory, CRM) into a single, real-time operational dashboard. It prioritizes speed\u2014delivering unified insights in days, not months.  \n- **Forecasting Engine** is an 8-step predictive analytics tool that uses structured data (often from Retify or other sources) to generate demand forecasts, inventory optimization, and sales predictions via machine learning.  \n\n**Use Case**:  \n- **Retify** drives immediate ROI by enabling retailers to resolve data silos, improve operational efficiency, and make agile decisions (e.g., pricing, promotions, stock allocation).  \n- **Forecasting Engine** builds on unified data to deliver forward-looking insights, reducing overstock/understock risks and improving margin capture through precision forecasting.  \n\nIn practice, Retify provides the foundation for accurate forecasting, while the Forecasting Engine transforms unified data into actionable predictions.\n\nWhat does a typical workflow look like from request to delivery?"
+      }
+    ]
+  },
+  {
+    "name": "rag_concept",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "What does demand planning actually mean in plain language?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "RAG_ONLY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "concept_explanation",
+          "intent_confidence": 0.9,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "RAG_ONLY",
+          "internal_mode": "discover",
+          "catalog_product_fit": "forecasting",
+          "catalog_reasons": [
+            "demand planning"
+          ],
+          "solution_category": null,
+          "solution_reasons": [],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "What does demand planning actually mean in plain language? definition explanation",
+            "namespace": "forecasting",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "intent=concept_explanation"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "fact_planning is manual b",
+            "catalog_product_fit"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "intent=concept_explanation"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "RAG_ONLY",
+          "mode_reasons": [
+            "intent=concept_explanation"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "intent=concept_explanation"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "fact_planning is manual b",
+            "catalog_product_fit"
+          ],
+          "required_question_key": "business_context",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Demand planning is the process of predicting how much of a product or service customers will want in the future, based on historical sales, market trends, seasonal patterns, and other factors. It helps businesses align production, inventory, and logistics with expected demand to avoid shortages or excess stock. In plain terms: it\u2019s about guessing what customers will need next, so companies can prepare without overproducing or running out.\n\nWhat does a typical workflow look like from request to delivery?"
+      }
+    ]
+  },
+  {
+    "name": "custom_architecture",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We're building a two-sided marketplace for equipment rentals \u2014 bookings, payments, and vendor dashboards.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "booking",
+          "intent_confidence": 0.8,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "discover",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "marketplace",
+            "two-sided"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "We're building a two-sided marketplace for equipment rentals \u2014 bookings, payments, and vendor dashboards. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "default_discovery"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "solution_category"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "default_discovery"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "EXPLORE",
+          "execution_mode": "DISCOVERY",
+          "mode_reasons": [
+            "default_discovery"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "default_discovery"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "solution_category"
+          ],
+          "required_question_key": "business_context",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "That\u2019s an exciting space! For marketplaces, unifying data between buyers, vendors, and operational systems is critical to avoid friction. Could you share what specific challenges you\u2019re facing with bookings, payments, or vendor management today?\n\nWhat does a typical workflow look like from request to delivery?"
+      },
+      {
+        "turn": 2,
+        "message": "Main pain is manual coordination between vendors and renters; we need to scale past 500 transactions per week.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "ok",
+        "quality_passed": false,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "discover",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "marketplace",
+            "two-sided"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "Main pain is manual coordination between vendors and renters; we need to scale past 500 transactions per week. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "default_discovery"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "default_discovery"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "DISCOVERY",
+          "funnel_stage": "EXPLORE",
+          "execution_mode": "DISCOVERY",
+          "mode_reasons": [
+            "default_discovery"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.17,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "default_discovery"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale"
+          ],
+          "required_question_key": "bottleneck",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [
+          "STUCK_IN_DISCOVERY"
+        ],
+        "assistant_text": "That aligns with the urgency of automating workflows to handle growth. To identify the right solution, could you describe where the biggest delays occur in your current process (e.g., booking confirmation, payment processing, inventory sync)? Are there any systems already in use that could integrate with automation?\n\nWhich step creates the most delay \u2014 intake, planning, or execution?"
+      },
+      {
+        "turn": 3,
+        "message": "Goal is to automate intake, scheduling, and status tracking with a custom platform.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.2,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "INTEREST",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.2,
+          "tool_confidence": 0.2,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "custom",
+            "marketplace",
+            "two-sided"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "Goal is to automate intake, scheduling, and status tracking with a custom platform. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "BOTTLENECK_ISOLATION",
+          "funnel_stage": "INTEREST",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.2,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck"
+          ],
+          "required_question_key": "integration",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "Observation: Main pain is manual coordination between vendors and renters; need to scale past 500 transactions per week  \nEvidence: Manual coordination creates operational friction and limits scalability, directly impacting transaction velocity and vendor-renter alignment  \nInference: Current scheduling processes (identified as primary bottleneck) are likely causing delays in intake and status tracking, with medium confidence (0.7) due to unconfirmed integration gaps  \n\nObservation: Goal is to automate intake, scheduling, and status tracking with a custom platform  \nEvidence: Custom platform development implies existing systems lack modular automation for these workflows, increasing technical debt  \nInference: Lack of integrated scheduling automation may require phased retrofitting rather than full replacement, with low confidence (0.4) due to unresolved integration dependencies\n\nWhich system is currently the bottleneck \u2014 ERP, manual routing, or coordination?"
+      },
+      {
+        "turn": 4,
+        "message": "We use Stripe for payments and need API integrations with our CRM.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.2,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "INTEREST",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.2,
+          "tool_confidence": 0.2,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "custom",
+            "marketplace",
+            "two-sided"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "We use Stripe for payments and need API integrations with our CRM. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck",
+            "system_crm",
+            "system_api"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "BOTTLENECK_ISOLATION",
+          "funnel_stage": "INTEREST",
+          "execution_mode": "DIAGNOSE",
+          "mode_reasons": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.2,
+          "readiness": {
+            "architecture": false,
+            "product_tour": false,
+            "fidp": false,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "stage=BOTTLENECK_ISOLATION",
+            "should_diagnose"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck",
+            "system_crm",
+            "system_api"
+          ],
+          "required_question_key": "bottleneck",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [
+          "MISSING_DIAGNOSE_FORMAT"
+        ],
+        "assistant_text": "Inference: Current reliance on Stripe for payments and need for CRM API integrations suggest fragmented system architecture, with medium confidence (0.6) due to unconfirmed data silos between payment and coordination workflows  \nEvidence: Payment processing (Stripe) and CRM integration are decoupled from scheduling automation, creating manual handoffs that slow transaction velocity  \nTradeoff: Without unified data flow between payment, CRM, and scheduling systems, scaling beyond 500 transactions risks compounding coordination delays and increasing operational overhead\n\nWhich step creates the most delay \u2014 intake, planning, or execution?"
+      },
+      {
+        "turn": 5,
+        "message": "Can you design a system architecture for this? Include integrations and data flow.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "ARCHITECTURE",
+        "internal_mode": "deliver",
+        "routing_confidence": 0.2,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "QUALIFY",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "technical_solution_request",
+          "intent_confidence": 0.95,
+          "routing_confidence": 0.2,
+          "tool_confidence": 0.2,
+          "execution_mode": "ARCHITECTURE",
+          "internal_mode": "deliver",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "custom",
+            "marketplace",
+            "two-sided"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "tool_plan_arguments": {
+            "query": "design a system architecture for this? Include integrations and data flow. architecture integration workflow manual",
+            "namespace": "architecture",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "deferred_architecture+minimum_context",
+            "tool_confidence:0.20->clear_deliverable"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck",
+            "system_crm",
+            "system_api"
+          ],
+          "evidence_score": 0.2,
+          "mode_reasons": [
+            "deferred_architecture+minimum_context"
+          ]
+        },
+        "decision_trace": {
+          "pipeline_stage": "BOTTLENECK_ISOLATION",
+          "funnel_stage": "QUALIFY",
+          "execution_mode": "ARCHITECTURE",
+          "mode_reasons": [
+            "deferred_architecture+minimum_context"
+          ],
+          "conflict_hold": false,
+          "evidence_score": 0.2,
+          "routing_confidence_advisory": 0.2,
+          "readiness": {
+            "architecture": true,
+            "product_tour": false,
+            "fidp": true,
+            "lead_capture": false,
+            "booking": false
+          },
+          "tool_selected": "rag_query",
+          "tool_reason": "rag_required bypass",
+          "gates_applied": [
+            "deferred_architecture+minimum_context",
+            "tool_confidence:0.20->clear_deliverable"
+          ],
+          "gates_rejected": [],
+          "memory_lines_used": [
+            "solution_category",
+            "goal",
+            "system_manual",
+            "scale",
+            "primary_bottleneck",
+            "system_crm",
+            "system_api"
+          ],
+          "required_question_key": "integration",
+          "eval_tier": "T0_deterministic"
+        },
+        "flags": [],
+        "assistant_text": "DELIVERABLE: System Architecture for Equipment Rental Marketplace  \n\n**Core Components**  \n1. **Centralized Orchestration Layer**  \n   - **Role**: Acts as the central nervous system, coordinating intake, scheduling, and status tracking.  \n   - **Key Features**:  \n     - RESTful API for front-end (renter/vendor) interactions.  \n     - Webhooks for real-time updates (e.g., Stripe payment confirmations, CRM syncs).  \n     - Integration with external systems via pre-built connectors (Stripe, CRM).  \n\n2. **Modules**  \n   - **Intake Module**:  \n     - Captures booking requests (equipment type, dates, location).  \n     - Validates availability via scheduling module.  \n     - Triggers payment flow via Stripe API.  \n   - **Scheduling Module**:  \n     - Syncs with CRM (via API) to check vendor availability and inventory.  \n     - Uses a rules engine for automated scheduling (e.g., prioritizing vendors with open capacity).  \n     - Logs scheduling decisions in a time-series database for auditability.  \n   - **Execution Module**:  \n     - Triggers vendor notifications (email/SMS) via CRM integration.  \n     - Syncs payment status from Stripe to update booking status.  \n     - Uses WebSocket/SSE for real-time status updates to renters/vendors.  \n\n3. **Data Flow**  \n   - **Intake \u2192 Scheduling**: Booking request \u2192 CRM (vendor availability) + Stripe (payment intent).  \n   - **Scheduling \u2192 Execution**: Confirmed schedule \u2192 CRM (vendor task creation) + Stripe (payment confirmation).  \n   - **Execution \u2192 Dashboard**: Real-time status updates pushed to renters/vendors.  \n\n4. **External Integrations**  \n   - **Stripe**: Payment processing (webhooks for payment success/failure).  \n   - **CRM**: Vendor management, customer data, and task automation (API syncs).  \n   - **Analytics Layer**: Aggregates data from orchestration layer for reporting (e.g., transaction velocity, bottlenecks).  \n\n**Scalability & Reliability**  \n- **Database**: Centralized relational DB (e.g., PostgreSQL) for core data + time-series DB (e.g., InfluxDB) for scheduling logs.  \n- **Caching**: Redis for high-velocity data (e.g., inventory status).  \n- **Security**: API gateways with OAuth2 for external system access; encryption for payment/data flows.  \n\n**Bottleneck Mitigation**  \n- **Scheduling**: Pre-emptively syncs CRM and Stripe data every 5 minutes to reduce latency.  \n- **Error Handling**: Orchestration layer retries failed integrations (e.g., CRM API timeouts) with exponential backoff.  \n\n**Phased Implementation**  \n1. **Phase 1**: Deploy orchestration layer + intake/scheduling modules (Stripe CRM integration).  \n2. **Phase 2**: Add execution module + real-time dashboard.  \n3. **Phase 3**: Integrate analytics layer for scalability monitoring.  \n\nThis design prioritizes automation of the scheduling bottleneck while preserving flexibility for future expansion (e.g., adding new payment gateways).\n\nWhich system is currently the bottleneck \u2014 ERP, manual routing, or coordination?"
+      }
+    ]
+  }
+]

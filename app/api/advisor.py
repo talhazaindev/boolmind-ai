@@ -14,7 +14,12 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.advisor.analytics.events import session_start
 from app.advisor.constants import PRODUCT_NAMES
-from app.advisor.integrations.failed_operations import clear_memory_queue, get_memory_queue
+from app.advisor.integrations.failed_operations import get_memory_queue
+from app.advisor.integrations.failed_ops_retry import replay_all_queues
+from app.advisor.integrations.integration_health import check_all as integration_health_check
+from app.advisor.integrations.supabase_client import fetch_chat_events, fetch_failed_operations
+from app.advisor.monitoring.rollup import metrics_summary
+from app.advisor.monitoring.prometheus_metrics import set_failed_ops_pending
 from app.advisor.security import (
     check_rate_limit,
     client_ip,
@@ -230,31 +235,90 @@ async def chat(request: Request) -> EventSourceResponse:
 
 @router.post("/retry-failed-ops")
 async def retry_failed_ops() -> dict[str, Any]:
-    """Retry queued failed operations (cron / external scheduler)."""
-    queue = get_memory_queue()
-    retried = 0
-    for item in queue:
-        if item.get("retries", 0) >= 5:
-            continue
-        item["retries"] = item.get("retries", 0) + 1
-        retried += 1
-    if retried and len(queue) == retried:
-        clear_memory_queue()
-    return {"retried": retried, "pending": len(get_memory_queue())}
+    """Retry queued failed operations (memory + Supabase)."""
+    result = await replay_all_queues()
+    set_failed_ops_pending(result["pending"])
+    return result
+
+
+@router.get("/admin/integrations/health")
+async def admin_integrations_health() -> dict[str, Any]:
+    """Live connectivity probes for configured integrations."""
+    return await integration_health_check()
 
 
 @router.get("/admin/stats")
 async def admin_stats() -> dict[str, Any]:
     """Lightweight admin visibility (Phase 4)."""
+    queue = get_memory_queue()
+    remote_count = 0
+    if settings.supabase_configured:
+        remote_count = len(await fetch_failed_operations())
+    set_failed_ops_pending(len(queue) + remote_count)
+    health = await integration_health_check()
+    integrations = {
+        "hubspot": settings.hubspot_configured,
+        "calcom": settings.calcom_configured,
+        "resend": settings.resend_configured,
+        "supabase": settings.supabase_configured,
+        "posthog": settings.posthog_configured,
+        "sentry": settings.sentry_configured,
+    }
+    integration_health = {
+        name: health.get(name, {}).get("status", "OFF" if not integrations.get(name) else "ON")
+        for name in integrations
+    }
     return {
-        "failedOperations": len(get_memory_queue()),
+        "failedOperations": len(queue) + remote_count,
         "advisorReady": settings.advisor_tier_a_ready,
-        "integrations": {
-            "hubspot": settings.hubspot_configured,
-            "calcom": settings.calcom_configured,
-            "resend": settings.resend_configured,
-            "supabase": settings.supabase_configured,
-            "posthog": settings.posthog_configured,
-            "sentry": settings.sentry_configured,
+        "telemetryEnabled": settings.telemetry_enabled,
+        "integrations": integrations,
+        "integrationHealth": integration_health,
+        "links": {
+            "grafana": "http://localhost:3001",
+            "posthog": settings.posthog_host if settings.posthog_configured else None,
+            "sentry": "https://sentry.io/issues/" if settings.sentry_configured else None,
         },
+    }
+
+
+@router.get("/admin/metrics/summary")
+async def admin_metrics_summary() -> dict[str, Any]:
+    """Aggregated telemetry rollup for the last hour."""
+    return metrics_summary()
+
+
+@router.get("/admin/sessions/{session_id}/events")
+async def admin_session_events(session_id: str) -> dict[str, Any]:
+    """Chat event audit trail for a session (Supabase chat_events)."""
+    events = await fetch_chat_events(session_id)
+    return {"session_id": session_id, "events": events, "count": len(events)}
+
+
+@router.get("/admin/failed-ops")
+async def admin_failed_ops() -> dict[str, Any]:
+    """List pending failed operations (memory + Supabase)."""
+    memory = [{**item, "source": "memory"} for item in get_memory_queue()]
+    remote: list[dict[str, Any]] = []
+    if settings.supabase_configured:
+        rows = await fetch_failed_operations()
+        for row in rows:
+            payload = row.get("payload") or {}
+            remote.append(
+                {
+                    "id": row.get("id"),
+                    "source": "supabase",
+                    "operation": row.get("operation"),
+                    "error": row.get("error_message", ""),
+                    "retries": row.get("retries", 0),
+                    "created_at": row.get("created_at"),
+                    "payload": payload,
+                }
+            )
+    combined = memory + remote
+    return {
+        "memory": memory,
+        "supabase": remote,
+        "combined": combined,
+        "pending": len(combined),
     }

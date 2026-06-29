@@ -1,98 +1,60 @@
-"""Groq chat loop with tool calling and SSE events."""
+"""Groq chat loop with execution engine — pre-flight tools, single LLM call."""
 
 from __future__ import annotations
 
-import json
 import logging
+import os
 from collections.abc import AsyncIterator
 from typing import Any
 
 from app.advisor.ab_testing import prompt_variant_suffix
-from app.advisor.integrations.groq_llm import get_chat_llm_client, _is_rate_limit_error
-from app.advisor.integrations.redis_store import RedisSessionStore
-from app.advisor.orchestrator.conversation_evaluator import evaluate_turn
-from app.advisor.orchestrator.conversation_mode import (
-    intent_prompt_suffix,
-    mode_prompt_suffix,
-    select_conversation_mode,
-    update_consecutive_question_turns,
-)
-from app.advisor.orchestrator.goal_context import detect_primary_goal, goal_lock_prompt_block
-from app.advisor.orchestrator.industry_strategy import should_defer_boolmind_pitch
-from app.advisor.orchestrator.intent_classifier import (
-    classify_intent,
-    is_advisory_intent,
-    is_concept_explanation,
-    is_solution_architecture_mode,
-)
-from app.advisor.orchestrator.product_context import ProductContext, apply_product_fit
-from app.advisor.orchestrator.recommendation import (
-    build_recommendation_block,
-    build_synthesis_block,
-    should_synthesize,
-)
-from app.advisor.orchestrator.intent_classifier import is_channel_prioritization
-from app.advisor.orchestrator.operations_diagnosis import (
-    hypothesis_unvalidated as ops_hypothesis_unvalidated,
-    infer_ops_bottleneck,
-)
-from app.advisor.orchestrator.problem_dimension import (
-    detect_problem_dimension,
-    dimension_lock_prompt_block,
-)
-from app.advisor.orchestrator.profitability_diagnosis import (
-    hypothesis_unvalidated as profit_hypothesis_unvalidated,
-    infer_profit_hypothesis,
-)
-from app.advisor.orchestrator.workforce_diagnosis import (
-    hypothesis_unvalidated as workforce_hypothesis_unvalidated,
-    infer_workforce_hypothesis,
-)
-from app.advisor.orchestrator.strategy_diagnosis import (
-    build_opening_value_block,
-    detect_active_channels,
-    infer_growth_blocker,
-)
-from app.advisor.orchestrator.reasoning_engine import (
-    build_reasoning_prompt_blocks,
-    mark_insight_delivered,
-    update_reasoning_state,
-)
-from app.advisor.orchestrator.response_guards import (
-    asks_for_contact,
-    boolmind_guard_rewrite_instruction,
-    email_guard_rewrite_instruction,
-    has_repeated_content,
-    hypothesis_structure_rewrite_instruction,
-    premature_solution_rewrite_instruction,
-    repetition_rewrite_instruction,
-    response_contains_premature_boolmind,
-    response_missing_hypothesis_structure,
-)
-from app.advisor.orchestrator.diagnostic_validation import response_contains_premature_solutions
-from app.advisor.orchestrator.session_metadata import (
-    persist_discovery_evaluation,
-    persist_visitor_metadata,
-)
-from app.advisor.orchestrator.system_prompt import SystemPromptContext, build_system_prompt
-from app.advisor.orchestrator.tool_args import (
-    is_groq_validation_error,
-    sanitize_tool_arguments,
-    strip_groq_validation_errors,
-)
-from app.advisor.orchestrator.tool_gating import (
-    detect_deferred_deliverable_request,
-    filter_tool_definitions,
-    is_tool_allowed,
-)
 from app.advisor.analytics.events import message_sent, product_discussed
+from app.advisor.integrations.groq_llm import _is_rate_limit_error, get_chat_llm_client
+from app.advisor.integrations.redis_store import RedisSessionStore
 from app.advisor.mcp import get_tool_router
 from app.advisor.mcp.mcp_host import get_mcp_host
-from app.advisor.types import PageContext, SessionMetadata
+from app.advisor.monitoring import events as ev
+from app.advisor.monitoring.latency import TurnLatency
+from app.advisor.monitoring.telemetry import emit
+from app.advisor.orchestrator.conversation_mode import update_consecutive_question_turns
+from app.advisor.orchestrator.evaluation_worker import enqueue_evaluation
+from app.advisor.orchestrator.product_context import ProductContext, apply_product_fit
+from app.advisor.orchestrator.prompt_composition import (
+    assemble_execution_prompt,
+    build_outcome_framing_block,
+)
+from app.advisor.pipeline.question_ledger import record_asked_question
+from app.advisor.pipeline.question_tracker import should_suppress_diagnostic_question
+from app.advisor.pipeline.turn_pipeline import TurnPipeline
+from app.advisor.orchestrator.public_output import PublicOutputFilter, sanitize_public_output
+from app.advisor.orchestrator.context_extractor import extract_context_llm_async
+from app.advisor.orchestrator.question_composer import build_narrator_hints
+from app.advisor.orchestrator.fact_grounding import sanitize_ungrounded_assertions
+from app.advisor.orchestrator.question_append import (
+    finalize_response,
+    question_already_in_text,
+    strip_redundant_questions,
+)
+from app.advisor.pipeline.conversation_planner import ConversationPlanner
+from app.advisor.pipeline.diagnostic_protocol import DiagnosticDepth
+from app.advisor.orchestrator.rag_degradation import call_with_rag_degradation, narrow_rag_namespace
+from app.advisor.orchestrator.response_guards import (
+    asks_for_contact,
+    has_repeated_content,
+)
+from app.advisor.orchestrator.response_quality import assess_response_quality
+from app.advisor.orchestrator.session_metadata import persist_visitor_metadata
+from app.advisor.orchestrator.tool_args import is_groq_validation_error, strip_groq_validation_errors
+from app.advisor.orchestrator.tool_context import build_deliverable_block, build_grounding_block
+from app.advisor.tools.case_retrieval import retrieve_case_evidence
+from app.advisor.constants import RAG_TOOLS, SELF_GROUNDING_TOOLS
+from app.advisor.types import PageContext, SessionMetadata, TurnContext
 
 logger = logging.getLogger(__name__)
 
-MAX_TOOL_ROUNDS = 5
+_FALLBACK_EMPTY = (
+    "I want to make sure I give you a useful answer — could you rephrase that briefly?"
+)
 
 
 class AdvisorChatLoop:
@@ -108,30 +70,16 @@ class AdvisorChatLoop:
                     return content
         return ""
 
-    async def _run_synthesis(
+    def _emit_public_delta(
         self,
-        system_prompt: str,
-        messages: list[dict[str, Any]],
-    ) -> AsyncIterator[str]:
-        api_messages = [{"role": "system", "content": system_prompt}] + messages
-        try:
-            stream = await self._llm.create_chat_stream(
-                messages=api_messages,
-                tools=None,
-                tool_choice=None,
-            )
-        except Exception as e:
-            if _is_rate_limit_error(e):
-                raise
-            logger.exception("Groq synthesis failed: %s", e)
-            raise
-
-        async for chunk in stream:
-            if not chunk.choices:
-                continue
-            delta = chunk.choices[0].delta
-            if delta.content and not is_groq_validation_error(delta.content):
-                yield delta.content
+        output_filter: PublicOutputFilter,
+        raw: str,
+    ) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        cleaned = output_filter.feed(raw)
+        if cleaned:
+            events.append({"type": "delta", "content": cleaned})
+        return events
 
     async def stream_chat(
         self,
@@ -143,401 +91,423 @@ class AdvisorChatLoop:
         product_context: ProductContext,
         session_meta: SessionMetadata | None,
     ) -> AsyncIterator[dict[str, Any]]:
+        turn_latency = TurnLatency()
+        turn_latency.mark("turn_start")
         history = await self._redis.get_history(session_id)
         messages: list[dict[str, Any]] = list(history)
         messages.append({"role": "user", "content": message})
 
         profile = session_meta or SessionMetadata()
-        evaluation = await evaluate_turn(
-            session_id=session_id,
-            user_message=message,
-            history=messages[:-1],
-            profile=profile,
-            product_context=product_context,
-            page_context=page_context,
-        )
-        updated_meta = await persist_discovery_evaluation(
-            self._redis,
-            visitor_id,
-            session_meta,
-            stage=evaluation.stage,
-            profile_updates=evaluation.profile_updates,
-            missing_fields=evaluation.missing_fields,
-            llm_readiness=evaluation.readiness,
-            user_sophistication=evaluation.user_sophistication,
-        )
-        readiness = updated_meta.readiness
-
-        # Gate custom_solutions fit until complexity confirmed
-        product_fit_candidate = updated_meta.product_fit
-        if (
-            product_fit_candidate == "custom_solutions"
-            and not updated_meta.custom_complexity_confirmed
-            and updated_meta.product_fit_confidence < 0.85
-        ):
-            product_fit_candidate = None
-
-        product_context = apply_product_fit(product_context, product_fit_candidate)
-        product_fit = product_fit_candidate
-
+        frozen_meta = profile.model_copy(deep=True)
         user_history_texts = [
             m.get("content", "")
             for m in messages[:-1]
             if m.get("role") == "user" and isinstance(m.get("content"), str)
         ]
-        channels = detect_active_channels(updated_meta, message, user_history_texts)
-        if channels:
-            updated_meta.channels_active = list(
-                dict.fromkeys([*updated_meta.channels_active, *channels])
-            )
-        blocker = infer_growth_blocker(updated_meta, message, user_history_texts)
-        if blocker != "unknown":
-            updated_meta.growth_blocker = blocker
-        ops_bottleneck = infer_ops_bottleneck(updated_meta, message, user_history_texts)
-        if ops_bottleneck != "unknown" and not ops_hypothesis_unvalidated(
-            updated_meta, message, user_history_texts
-        ):
-            updated_meta.ops_bottleneck = ops_bottleneck
-        profit_hypothesis = infer_profit_hypothesis(updated_meta, message, user_history_texts)
-        if profit_hypothesis != "unknown" and not profit_hypothesis_unvalidated(
-            updated_meta, message, user_history_texts
-        ):
-            updated_meta.profit_hypothesis = profit_hypothesis
-        workforce_hypothesis = infer_workforce_hypothesis(
-            updated_meta, message, user_history_texts
-        )
-        if workforce_hypothesis != "unknown" and not workforce_hypothesis_unvalidated(
-            updated_meta, message, user_history_texts
-        ):
-            updated_meta.workforce_hypothesis = workforce_hypothesis
-        dimension = detect_problem_dimension(updated_meta, message, user_history_texts)
-        if dimension != "unknown":
-            updated_meta.problem_dimension = dimension
 
-        updated_meta = update_reasoning_state(
-            updated_meta, message, user_history_texts
+        # --- Critical path: optional LLM context enrich + deterministic pipeline ---
+        llm_context = await extract_context_llm_async(message, user_history_texts)
+        planner = ConversationPlanner()
+        depth = DiagnosticDepth.from_session(frozen_meta)
+        seed_turn_plan = planner.plan(
+            session_metadata=frozen_meta,
+            depth=depth,
+            matched_archetypes=[],
+            message_count=frozen_meta.message_count,
         )
-
-        intent = classify_intent(message)
-        deferred_tool = detect_deferred_deliverable_request(message)
-        conversation_mode = select_conversation_mode(
-            message,
-            updated_meta,
-            readiness,
-            deferred_tool=deferred_tool,
-            product_fit=product_fit,
-            history_texts=user_history_texts,
-            reasoning_phase=updated_meta.reasoning_phase,
-        )
-
-        prompt_ctx = SystemPromptContext(
-            page_context=page_context,
-            session_data=updated_meta,
-            product_context=product_context,
-            user_language=user_language,
-            discovery=evaluation,
-            conversation_mode=conversation_mode,
-        )
-        system_prompt = build_system_prompt(prompt_ctx)
-        system_prompt += mode_prompt_suffix(conversation_mode)
-        system_prompt += intent_prompt_suffix(intent, conversation_mode)
-
-        primary_goal = detect_primary_goal(
-            updated_meta,
+        pipeline_result = TurnPipeline.run(
+            frozen_meta,
             message,
             user_history_texts,
+            active_product=product_context.active_product,
+            llm_context=llm_context,
+            seed_turn_plan=seed_turn_plan,
         )
-        if primary_goal != "unknown":
-            updated_meta.primary_goal = primary_goal  # type: ignore[assignment]
-        system_prompt += goal_lock_prompt_block(primary_goal, updated_meta)
-        system_prompt += dimension_lock_prompt_block(dimension, updated_meta)
+        extracted_meta = pipeline_result.extracted_meta
+        snapshot = pipeline_result.snapshot
+        fit_decision = pipeline_result.fit_decision
+        business_memory = pipeline_result.business_memory
+        readiness = pipeline_result.readiness
+        router_output = pipeline_result.router_output
+        decision_trace = pipeline_result.decision_trace
+        context_graph = pipeline_result.context_graph
+        internal_reasoning = pipeline_result.internal_reasoning
+        turn_value = pipeline_result.turn_value
+        legacy_fit = pipeline_result.legacy_fit
+        turn_plan = pipeline_result.turn_plan
+        matched_archetypes = pipeline_result.matched_archetypes
+        prev_diagnostic_depth = frozen_meta.diagnostic_depth
 
-        if is_channel_prioritization(message) and updated_meta.message_count <= 1:
-            system_prompt += build_opening_value_block()
+        product_context = apply_product_fit(product_context, legacy_fit)
 
-        reasoning_blocks = build_reasoning_prompt_blocks(
-            updated_meta, message=message, history=user_history_texts
+        case_evidence: list[dict[str, str]] = []
+        if turn_plan and turn_plan.allow_case_reference and matched_archetypes:
+            vertical = extracted_meta.active_business_vertical or extracted_meta.industry
+            case_evidence = await retrieve_case_evidence(matched_archetypes, vertical=vertical)
+
+        pipeline_result.case_evidence_retrieved = bool(case_evidence)
+        outcome_framing_block = build_outcome_framing_block(
+            matched_archetypes or None,
+            turn_plan,
         )
-        if reasoning_blocks:
-            system_prompt += reasoning_blocks
-        elif should_synthesize(updated_meta) and updated_meta.reasoning_phase == "discovery":
-            system_prompt += build_synthesis_block(
-                updated_meta, message=message, history=user_history_texts
+        pipeline_result.outcome_framing_applied = bool(outcome_framing_block.strip())
+
+        if pipeline_result.matched_archetype_ids:
+            await emit(
+                ev.ARCHETYPE_MATCHED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={
+                    "archetypes": pipeline_result.matched_archetype_ids,
+                    "similarity_scores": pipeline_result.archetype_similarity_scores,
+                    "vertical": extracted_meta.active_business_vertical
+                    or extracted_meta.industry,
+                },
             )
 
-        include_recommendation = (
-            not is_concept_explanation(message)
-            and not (is_channel_prioritization(message) and updated_meta.message_count <= 1)
-            and (
-                updated_meta.reasoning_phase in ("solution_exploration", "boolmind_positioning")
-                or (
-                    conversation_mode == "diagnose"
-                    and not reasoning_blocks
-                    and updated_meta.reasoning_phase == "discovery"
-                )
-                or (
-                    conversation_mode in ("advise", "recommend")
-                    and updated_meta.reasoning_phase
-                    not in (
-                        "hypothesis_generation",
-                        "hypothesis_testing",
-                        "convergence",
-                        "strategic_insight",
-                    )
-                )
-                or evaluation.should_recommend
-            )
-        )
-        if include_recommendation:
-            system_prompt += build_recommendation_block(
-                updated_meta,
-                conversation_mode,
-                user_message=message,
-                include_boolmind=not should_defer_boolmind_pitch(updated_meta),
-                history=user_history_texts,
+        if pipeline_result.diagnostic_depth != prev_diagnostic_depth:
+            await emit(
+                ev.DIAGNOSTIC_DEPTH_UPDATED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={
+                    "previous_depth": prev_diagnostic_depth,
+                    "new_depth": pipeline_result.diagnostic_depth,
+                    "phase": pipeline_result.diagnostic_phase,
+                    "delta_source": "turn_pipeline",
+                },
             )
 
-        if deferred_tool and not is_tool_allowed(
-            deferred_tool, readiness, product_fit=product_fit
-        ):
-            if is_advisory_intent(message):
-                system_prompt += (
-                    f"\n\nDELIVERABLE_DEFERRED: User asked for {deferred_tool}. "
-                    f"Do NOT call {deferred_tool} yet. "
-                    f"Acknowledge their interest and provide partial advisory value "
-                    f"with a Boolmind next step. Do NOT force a discovery question."
-                )
-            else:
-                system_prompt += (
-                    f"\n\nDELIVERABLE_DEFERRED: User asked for {deferred_tool}. "
-                    f"Do NOT call {deferred_tool}. "
-                    f"Write 2-3 sentences: (1) briefly acknowledge their interest, "
-                    f"(2) explain you need a little context first to tailor the demo/solution, "
-                    f"(3) end with this discovery question: \"{evaluation.next_discovery_question}\" "
-                    f"Never stop after acknowledgment alone — the last sentence MUST be a question."
-                )
-        elif (
-            is_solution_architecture_mode(message)
-            and readiness.architecture
-        ):
-            system_prompt += (
-                "\n\nACTIVE MODE: SOLUTION_ARCHITECTURE — use generate_architecture_proposal "
-                "and structured architecture format."
+        if pipeline_result.hypothesis_question_used:
+            await emit(
+                ev.HYPOTHESIS_QUESTION_SELECTED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={
+                    "question_key": decision_trace.required_question_key,
+                    "diagnostic_depth": pipeline_result.diagnostic_depth,
+                    "matched_archetypes": pipeline_result.matched_archetype_ids,
+                },
             )
 
-        system_prompt += prompt_variant_suffix(session_id, product_context.active_product)
-        message_sent(session_id, "user", product_context.active_product)
+        solution_gate_gates = [
+            g
+            for g in router_output.decision_record.confidence_gates_applied
+            if "<60->" in g
+        ]
+        if solution_gate_gates:
+            blocked_mode = "SALES"
+            for gate in solution_gate_gates:
+                tail = gate.split("<60->", 1)[-1]
+                if "->" in tail:
+                    blocked_mode = tail.split("->", 1)[0]
+                    break
+            await emit(
+                ev.SOLUTION_GATE_TRIGGERED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={
+                    "diagnostic_depth": pipeline_result.diagnostic_depth,
+                    "blocked_mode": blocked_mode,
+                    "gates": solution_gate_gates,
+                },
+            )
+
+        grounding_block: str | None = None
+        deliverable_block: str | None = None
+        rag_status = "skipped"
+        tool_router = get_tool_router()
         get_mcp_host()
-        router = get_tool_router()
-        all_tools = router.list_tools()
-        tools = filter_tool_definitions(all_tools, readiness, product_fit=product_fit)
 
-        full_assistant = ""
-        tool_messages_for_history: list[dict[str, Any]] = []
-        stage = updated_meta.stage_reached
-        active_product = product_context.active_product
-
-        for _round in range(MAX_TOOL_ROUNDS):
-            api_messages = [{"role": "system", "content": system_prompt}] + messages
-            tool_calls_acc: dict[int, dict[str, Any]] = {}
-            round_text = ""
-
-            try:
-                stream = await self._llm.create_chat_stream(
-                    messages=api_messages,
-                    tools=tools,
-                    tool_choice="auto",
+        plan = router_output.tool_plan
+        if plan:
+            args = dict(plan.arguments)
+            if plan.tool_name == "rag_query" and "namespace" in args:
+                args["namespace"] = narrow_rag_namespace(
+                    str(args["namespace"]),
+                    fit_decision,
+                    product_context.active_product,
                 )
-            except Exception as e:
-                if _is_rate_limit_error(e):
-                    logger.warning("Groq rate limit: all keys exhausted")
-                    yield {
-                        "type": "error",
-                        "code": "RATE_LIMIT",
-                        "message": (
-                            "We're handling high demand right now. "
-                            "Please wait a moment and try again."
-                        ),
-                    }
-                    return
-                logger.exception("Groq chat failed: %s", e)
-                yield {
-                    "type": "error",
-                    "code": "INTERNAL",
-                    "message": "Something went wrong. Please try again in a moment.",
-                }
-                return
+            yield {"type": "tool_start", "tool": plan.tool_name, "input": args}
+            turn_latency.mark("tools_batch_start")
 
-            async for chunk in stream:
-                if not chunk.choices:
-                    continue
-                delta = chunk.choices[0].delta
-                if delta.content:
-                    if is_groq_validation_error(delta.content):
-                        logger.warning("Groq tool validation error suppressed: %s", delta.content[:200])
-                        continue
-                    round_text += delta.content
-                    full_assistant += delta.content
-                    yield {"type": "delta", "content": delta.content}
-                if delta.tool_calls:
-                    for tc in delta.tool_calls:
-                        idx = tc.index
-                        if idx not in tool_calls_acc:
-                            tool_calls_acc[idx] = {
-                                "id": tc.id or "",
-                                "type": "function",
-                                "function": {"name": "", "arguments": ""},
-                            }
-                        if tc.id:
-                            tool_calls_acc[idx]["id"] = tc.id
-                        if tc.function:
-                            if tc.function.name:
-                                tool_calls_acc[idx]["function"]["name"] = tc.function.name
-                            if tc.function.arguments:
-                                tool_calls_acc[idx]["function"]["arguments"] += tc.function.arguments
-
-            if not tool_calls_acc:
-                break
-
-            assistant_msg: dict[str, Any] = {
-                "role": "assistant",
-                "content": round_text or None,
-                "tool_calls": [
-                    {
-                        "id": tool_calls_acc[i]["id"],
-                        "type": "function",
-                        "function": tool_calls_acc[i]["function"],
-                    }
-                    for i in sorted(tool_calls_acc.keys())
-                ],
-            }
-            messages.append(assistant_msg)
-            tool_messages_for_history.append(assistant_msg)
-
-            for i in sorted(tool_calls_acc.keys()):
-                tc = tool_calls_acc[i]
-                name = tc["function"]["name"]
-                try:
-                    args = json.loads(tc["function"]["arguments"] or "{}")
-                except json.JSONDecodeError:
-                    args = {}
-                args = sanitize_tool_arguments(name, args)
-                yield {"type": "tool_start", "tool": name, "input": args}
-                result = await router.call_tool(
-                    name,
+            async def _call() -> Any:
+                return await tool_router.call_tool(
+                    plan.tool_name,
                     args,
                     product_context,
                     session_id,
                     visitor_id,
                     readiness=readiness,
-                    product_fit=product_fit,
+                    product_fit=legacy_fit,
                 )
-                content = router.result_content(result)
-                yield {
-                    "type": "tool_result",
-                    "tool": name,
-                    "result": result.data if result.success else {"fallback": content},
-                }
-                tool_msg = {
-                    "role": "tool",
-                    "tool_call_id": tc["id"],
-                    "content": content,
-                }
-                messages.append(tool_msg)
-                tool_messages_for_history.append(tool_msg)
 
-        full_assistant = strip_groq_validation_errors(full_assistant)
+            result, rag_status = await call_with_rag_degradation(plan.tool_name, _call)
+            turn_latency.mark("tools_batch_end")
+            content = tool_router.result_content(result)
+            yield {
+                "type": "tool_result",
+                "tool": plan.tool_name,
+                "result": result.data if result.success else {"fallback": content},
+                "outcome": result.outcome,
+            }
+            if plan.tool_name in RAG_TOOLS and plan.tool_name not in SELF_GROUNDING_TOOLS:
+                block, grounding_block = build_grounding_block(result, plan.tool_name)
+                if (
+                    router_output.mode in ("DISCOVERY", "DIAGNOSE")
+                    and fit_decision.solution_category == "custom_solutions"
+                    and grounding_block
+                ):
+                    for name in (
+                        "Legal Data Fusion",
+                        "Retify",
+                        "ECG Document Intelligence",
+                    ):
+                        grounding_block = grounding_block.replace(name, "custom solutions")
+            else:
+                _, deliverable_block = build_deliverable_block(result, plan.tool_name)
 
-        needs_synthesis = not full_assistant.strip() or (
-            deferred_tool
-            and not is_tool_allowed(deferred_tool, readiness, product_fit=product_fit)
-            and not is_advisory_intent(message)
-            and "?" not in full_assistant
+        acknowledgment_hints = (
+            build_narrator_hints(
+                context_graph,
+                internal_reasoning,
+                snapshot,
+                extracted_meta,
+                router_output.mode,
+            )
+            if context_graph and internal_reasoning
+            else []
         )
-        if needs_synthesis:
-            try:
-                async for delta in self._run_synthesis(system_prompt, messages):
-                    full_assistant += delta
-                    yield {"type": "delta", "content": delta}
-            except Exception as e:
-                if _is_rate_limit_error(e):
-                    yield {
-                        "type": "error",
-                        "code": "RATE_LIMIT",
-                        "message": (
-                            "We're handling high demand right now. "
-                            "Please wait a moment and try again."
-                        ),
-                    }
-                    return
+
+        turn_value_block = turn_value.prompt_block if turn_value else None
+        turn_visual = (
+            turn_value.as_is_visual.model_dump()
+            if turn_value and turn_value.as_is_visual
+            else None
+        )
+
+        turn_ctx = TurnContext(
+            session_id=session_id,
+            message=message,
+            history_texts=tuple(user_history_texts),
+            frozen_meta=frozen_meta,
+            extracted_meta=extracted_meta,
+            snapshot=snapshot,
+            business_memory=business_memory,
+            product_fit_decision=fit_decision,
+            router_output=router_output,
+            grounding_block=grounding_block,
+            deliverable_block=deliverable_block,
+            rag_status=rag_status,
+            context_graph=context_graph,
+            internal_reasoning=internal_reasoning,
+            acknowledgment_hints=acknowledgment_hints,
+            next_question=snapshot.required_question,
+            turn_value_block=turn_value_block,
+            turn_visual=turn_visual,
+            turn_plan=turn_plan,
+            matched_archetypes=matched_archetypes,
+            case_evidence=case_evidence,
+        )
+
+        system_prompt = assemble_execution_prompt(turn_ctx)
+        system_prompt += prompt_variant_suffix(session_id, product_context.active_product)
+        message_sent(session_id, "user", product_context.active_product)
+
+        if pipeline_result.outcome_framing_applied:
+            await emit(
+                ev.OUTCOME_FRAMING_APPLIED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={
+                    "matched_archetypes": pipeline_result.matched_archetype_ids,
+                    "allow_solution_hint": bool(turn_plan and turn_plan.allow_solution_hint),
+                },
+            )
+
+        record = router_output.decision_record
+        record.memory_lines_used = [line.key for line in business_memory.lines]
+        await emit(
+            ev.ROUTER_DECISION,
+            session_id,
+            visitor_id=visitor_id,
+            metadata=record.model_dump(),
+        )
+        if decision_trace.conflict_hold:
+            await emit(
+                ev.CONFLICT_DETECTED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata=decision_trace.model_dump(),
+            )
+        await emit(
+            ev.MODE_SELECTED,
+            session_id,
+            visitor_id=visitor_id,
+            metadata={
+                "execution_mode": router_output.mode,
+                "mode_reasons": decision_trace.mode_reasons,
+                "pipeline_stage": decision_trace.pipeline_stage,
+            },
+        )
+
+        full_body = ""
+        output_filter = PublicOutputFilter()
+        first_token_marked = False
+        turn_latency.mark("llm_r0_start")
+
+        try:
+            stream = await self._llm.create_chat_stream(
+                messages=[{"role": "system", "content": system_prompt}] + messages,
+                tools=None,
+                tool_choice="none",
+            )
+        except Exception as e:
+            if _is_rate_limit_error(e):
+                await emit(ev.LLM_RATE_LIMITED, session_id, visitor_id=visitor_id)
                 yield {
                     "type": "error",
-                    "code": "INTERNAL",
-                    "message": "Something went wrong. Please try again in a moment.",
+                    "code": "RATE_LIMIT",
+                    "message": (
+                        "We're handling high demand right now. "
+                        "Please wait a moment and try again."
+                    ),
                 }
                 return
+            logger.exception("Groq chat failed: %s", e)
+            await emit(
+                ev.TOOL_FAILED,
+                session_id,
+                visitor_id=visitor_id,
+                metadata={"error_class": type(e).__name__, "stage": "llm_stream"},
+                exception=e,
+            )
+            yield {
+                "type": "error",
+                "code": "INTERNAL",
+                "message": "Something went wrong. Please try again in a moment.",
+            }
+            return
 
-        full_assistant = strip_groq_validation_errors(full_assistant)
+        streamed_public = ""
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+            if delta.content and not is_groq_validation_error(delta.content):
+                full_body += delta.content
+                if not first_token_marked:
+                    turn_latency.mark("first_token")
+                    first_token_marked = True
+                for event in self._emit_public_delta(output_filter, delta.content):
+                    if event.get("type") == "delta" and event.get("content"):
+                        streamed_public += str(event["content"])
+                    yield event
+
+        turn_latency.mark("llm_r0_end")
+        trailing = output_filter.flush()
+        if trailing:
+            full_body += trailing
+            yield {"type": "delta", "content": trailing}
+
+        if internal_reasoning:
+            await emit(
+                ev.INTERNAL_REASONING,
+                session_id,
+                visitor_id=visitor_id,
+                metadata=internal_reasoning.model_dump(),
+            )
+
+        full_body = strip_groq_validation_errors(full_body)
+        full_body = sanitize_public_output(full_body)
+        full_body = sanitize_ungrounded_assertions(
+            full_body,
+            router_output.mode,
+            snapshot,
+            extracted_meta,
+            context_graph,
+        )
+        full_body = strip_redundant_questions(
+            full_body,
+            snapshot,
+            extracted_meta,
+            appended_question=snapshot.required_question,
+            graph=context_graph,
+            message=message,
+            history=user_history_texts,
+        )
+
+        if not full_body.strip():
+            full_body = _FALLBACK_EMPTY
+            yield {"type": "delta", "content": full_body}
+
+        quality = assess_response_quality(
+            full_body, router_output.mode, snapshot
+        )
+        await emit(
+            ev.RESPONSE_QUALITY,
+            session_id,
+            visitor_id=visitor_id,
+            metadata=quality.model_dump(),
+        )
+
+        updated_meta = extracted_meta.model_copy(deep=True)
+        if not quality.passed:
+            updated_meta.quality_hint_next_turn = True
+            updated_meta.quality_failure_count = (updated_meta.quality_failure_count or 0) + 1
+        else:
+            updated_meta.quality_hint_next_turn = False
+
+        required_q = snapshot.required_question
+        if should_suppress_diagnostic_question(
+            router_output.mode,
+            has_deliverable=bool(deliverable_block),
+        ):
+            required_q = None
+
+        full_assistant = finalize_response(full_body, required_q)
+        if turn_value and turn_value.as_is_visual:
+            yield {
+                "type": "visual",
+                "visualType": turn_value.as_is_visual.visual_type,
+                "title": turn_value.as_is_visual.title,
+                "mermaid": turn_value.as_is_visual.mermaid,
+                "caption": turn_value.as_is_visual.caption,
+                "isDraft": turn_value.as_is_visual.is_draft,
+            }
+        if required_q:
+            updated_meta = record_asked_question(updated_meta, required_q)
+        if (
+            required_q
+            and full_assistant != full_body
+            and not question_already_in_text(streamed_public, required_q)
+        ):
+            appended = full_assistant[len(full_body.rstrip()) :].strip()
+            if appended:
+                yield {"type": "delta", "content": "\n\n" + appended}
 
         prev_assistant = self._previous_assistant_text(history)
-        rewrite_prompt = system_prompt
-        needs_rewrite = False
+        if has_repeated_content(full_assistant, prev_assistant):
+            full_assistant = sanitize_public_output(
+                full_assistant + " Let me add a different angle for you."
+            )
+
         if not readiness.lead_capture and asks_for_contact(full_assistant):
-            rewrite_prompt += email_guard_rewrite_instruction()
-            needs_rewrite = True
-        elif has_repeated_content(full_assistant, prev_assistant):
-            rewrite_prompt += repetition_rewrite_instruction()
-            needs_rewrite = True
-        elif conversation_mode == "diagnose" and response_contains_premature_solutions(
-            full_assistant
-        ):
-            rewrite_prompt += premature_solution_rewrite_instruction()
-            needs_rewrite = True
-        elif response_contains_premature_boolmind(
-            full_assistant, updated_meta.reasoning_phase
-        ):
-            rewrite_prompt += boolmind_guard_rewrite_instruction()
-            needs_rewrite = True
-        elif response_missing_hypothesis_structure(
-            full_assistant, updated_meta.reasoning_phase
-        ):
-            rewrite_prompt += hypothesis_structure_rewrite_instruction()
-            needs_rewrite = True
-
-        if needs_rewrite:
-            rewrite_messages = messages + [
-                {"role": "assistant", "content": full_assistant},
-            ]
-            rewritten = ""
-            try:
-                async for delta in self._run_synthesis(rewrite_prompt, rewrite_messages):
-                    rewritten += delta
-                    yield {"type": "delta", "content": delta}
-            except Exception:
-                pass
-            else:
-                if rewritten.strip():
-                    full_assistant = strip_groq_validation_errors(rewritten)
-
-        if (
-            updated_meta.reasoning_phase == "strategic_insight"
-            and full_assistant.strip()
-        ):
-            updated_meta = mark_insight_delivered(updated_meta)
+            full_assistant = sanitize_public_output(
+                full_assistant.replace("email", "next step").replace("Email", "Next step")
+            )
 
         consecutive = update_consecutive_question_turns(
-            updated_meta, full_assistant, conversation_mode
+            updated_meta, full_assistant, router_output.internal_mode
         )
+        if required_q:
+            consecutive = max(consecutive, (updated_meta.consecutive_question_turns or 0) + 1)
         updated_meta.consecutive_question_turns = consecutive
+
         if visitor_id:
             await self._redis.save_visitor_metadata(visitor_id, updated_meta)
 
-        await self._redis.append_history(
-            session_id,
-            message,
-            full_assistant,
-            tool_messages_for_history if tool_messages_for_history else None,
-        )
+        await self._redis.append_history(session_id, message, full_assistant, None)
 
         await persist_visitor_metadata(
             self._redis,
@@ -547,19 +517,70 @@ class AdvisorChatLoop:
             updated_meta,
         )
 
+        enqueue_evaluation(
+            self._redis,
+            session_id,
+            visitor_id,
+            message,
+            messages[:-1],
+            updated_meta,
+            product_context,
+            page_context,
+        )
+        await emit(ev.EVAL_QUEUED, session_id, visitor_id=visitor_id)
+
         discussed = list(product_context.products_discussed)
         if product_context.active_product and product_context.active_product not in discussed:
             discussed.append(product_context.active_product)
             product_discussed(session_id, product_context.active_product)
         message_sent(session_id, "assistant", product_context.active_product)
 
-        yield {
+        turn_latency.mark("turn_end")
+        turn_summary = turn_latency.summary()
+        logger.info(
+            "[advisor.latency] session=%s total_ms=%.1f execution_mode=%s rag=%s",
+            session_id,
+            turn_summary["total_ms"],
+            router_output.mode,
+            rag_status,
+        )
+        await emit(
+            ev.TURN_COMPLETED,
+            session_id,
+            visitor_id=visitor_id,
+            product_id=product_context.active_product,
+            metadata={
+                **turn_summary,
+                "execution_mode": router_output.mode,
+                "rag_status": rag_status,
+                "quality_score": quality.score,
+            },
+        )
+
+        done_event: dict[str, Any] = {
             "type": "done",
             "sessionId": session_id,
-            "stage": stage,
-            "activeProduct": active_product,
+            "stage": updated_meta.stage_reached,
+            "activeProduct": product_context.active_product,
             "productsDiscussed": discussed,
             "missingFields": updated_meta.missing_fields,
             "readiness": updated_meta.readiness.model_dump(),
-            "conversationMode": conversation_mode,
+            "conversationMode": router_output.internal_mode,
+            "executionMode": router_output.mode,
+            "routingConfidence": router_output.routing_confidence,
+            "toolConfidence": router_output.tool_confidence,
+            "ragStatus": rag_status,
+            "qualityScore": quality.score,
+            "qualityPassed": quality.passed,
+            "evalQueued": True,
+            "resolutionTrace": router_output.resolution.trace,
+            "decisionTrace": decision_trace.model_dump(),
+            "diagnosticDepth": pipeline_result.diagnostic_depth,
+            "diagnosticPhase": pipeline_result.diagnostic_phase,
+            "matchedArchetypes": pipeline_result.matched_archetype_ids,
+            "turnPlanPriority": pipeline_result.turn_plan_priority,
+            "hypothesisQuestionUsed": pipeline_result.hypothesis_question_used,
         }
+        if os.getenv("ADVISOR_DEBUG_ROUTER", "").lower() in ("1", "true", "yes"):
+            done_event["routerDecision"] = record.model_dump()
+        yield done_event

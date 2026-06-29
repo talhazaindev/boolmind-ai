@@ -26,6 +26,7 @@ dependencies = [
     "mcp>=1.27.2,<2",
     "sentry-sdk>=2.61.0",
     "posthog>=7.16.0",
+    "prometheus-client>=0.21.0",
     "python-dotenv>=1.0.0",
 ]
 

@@ -42,5 +42,10 @@ async def handle(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"status": "sent", "email": arguments["email"]}
     except Exception as e:
         logger.exception("Resend failed: %s", e)
-        await queue_failed_operation("send_meeting_invite", arguments, str(e))
+        await queue_failed_operation(
+            "send_meeting_invite",
+            arguments,
+            str(e),
+            session_id=arguments.get("session_id"),
+        )
         return {"status": "fallback", "message": "Booking saved; invite email will follow."}

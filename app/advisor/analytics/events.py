@@ -76,3 +76,12 @@ def discovery_evaluated(session_id: str, stage: str, missing_field_count: int) -
         session_id,
         {"stage": stage, "missing_field_count": missing_field_count},
     )
+
+
+def capture_telemetry(
+    session_id: str,
+    event_type: str,
+    properties: dict[str, Any] | None = None,
+) -> None:
+    """Emit advisor telemetry event to PostHog (no PII)."""
+    capture(event_type, session_id, properties)

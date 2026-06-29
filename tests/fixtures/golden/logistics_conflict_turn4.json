@@ -1,0 +1,20 @@
+{
+  "name": "logistics_conflict_turn4",
+  "frozen_meta": {
+    "active_business_vertical": "logistics",
+    "industry": "logistics",
+    "pain_point": "delays",
+    "goals": "improve dispatch",
+    "message_count": 3
+  },
+  "message": "We are a manufacturing company with 40 employees",
+  "history": [
+    "We run a logistics company",
+    "We dispatch 1500 shipments/day manually. Drivers wait 30-60 minutes."
+  ],
+  "expect": {
+    "conflict_hold": true,
+    "execution_mode_not": "SALES",
+    "vertical_unchanged": "logistics"
+  }
+}

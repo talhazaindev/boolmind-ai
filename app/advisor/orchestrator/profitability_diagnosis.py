@@ -188,28 +188,32 @@ def profitability_diagnostic_question(
     message: str = "",
     history: list[str] | None = None,
 ) -> str:
-    hypotheses = detect_profit_hypotheses(meta, message, history)
+    from app.advisor.pipeline.hypothesis_engine import build_hypothesis_evidence_question
+    from app.advisor.pipeline.question_value import build_profitability_evidence_question
+    from app.advisor.types import HypothesisSnapshot
+
+    evidence_q = build_hypothesis_evidence_question(
+        meta,
+        HypothesisSnapshot(),
+        message=message,
+        history=history,
+    )
+    if evidence_q:
+        return evidence_q
+
+    evidence_q = build_profitability_evidence_question(
+        meta,
+        HypothesisSnapshot(),
+        message=message,
+        history=history,
+    )
+    if evidence_q:
+        return evidence_q
+
     label = business_label(meta)
-
-    if len(hypotheses) >= 2:
-        options = [_HYPOTHESIS_LABELS.get(h, h) for h in hypotheses[:3]]
-        if len(options) == 2:
-            return (
-                f"Which feels closer for {label}: {options[0]}, or {options[1]}?"
-            )
-        return (
-            f"Which feels closer for {label}: {options[0]}, {options[1]}, or {options[2]}?"
-        )
-
-    if len(hypotheses) == 1:
-        other_keys = [k for k in ("pricing", "efficiency", "utilization") if k != hypotheses[0]][:2]
-        opts = [_HYPOTHESIS_LABELS[hypotheses[0]]] + [_HYPOTHESIS_LABELS[k] for k in other_keys]
-        return f"Which feels closer for {label}: {opts[0]}, {opts[1]}, or {opts[2]}?"
-
     return (
-        f"For {label}, does the profit gap feel more like pricing (not charging enough "
-        f"for the effort), efficiency (too much unbillable or low-value work), or "
-        f"client mix (too many low-margin engagements)?"
+        f"For {label}, which operational factor shifted most recently in a way "
+        f"that could explain what you described?"
     )
 
 

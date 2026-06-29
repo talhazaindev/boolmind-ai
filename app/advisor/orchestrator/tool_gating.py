@@ -20,6 +20,8 @@ _STAGE_ORDER: dict[ConversationStage, int] = {
     "DONE": 5,
 }
 
+STAGE_ORDER = _STAGE_ORDER
+
 _DEFERRED_TOOL_PATTERNS: dict[str, list[str]] = {
     "product_tour": [r"\btour\b", r"\bwalkthrough\b", r"\bdemo\b", r"\bshow me how\b"],
     "generate_architecture_proposal": [

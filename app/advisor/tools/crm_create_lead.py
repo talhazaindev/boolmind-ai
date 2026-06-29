@@ -9,9 +9,39 @@ import httpx
 
 from app.advisor.analytics.events import lead_captured
 from app.advisor.integrations.redis_store import get_redis_store
+from app.advisor.integrations.supabase_client import insert_lead
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+async def _mirror_lead_to_supabase(
+    arguments: dict[str, Any],
+    session_id: str,
+    visitor_id: str | None,
+    *,
+    hubspot_id: str | None = None,
+) -> None:
+    if not settings.supabase_configured:
+        return
+    products = arguments.get("products_discussed", [])
+    try:
+        await insert_lead(
+            {
+                "session_id": session_id,
+                "visitor_id": visitor_id,
+                "email": arguments.get("email", ""),
+                "name": arguments.get("name"),
+                "primary_product": arguments.get("primary_product"),
+                "products_discussed": products if products else None,
+                "qualification_score": arguments.get("qualification_score"),
+                "stage_at_capture": arguments.get("stage_at_capture"),
+                "use_case": arguments.get("use_case"),
+                "hubspot_id": hubspot_id,
+            }
+        )
+    except Exception as e:
+        logger.warning("Supabase lead mirror failed: %s", e)
 
 
 async def handle(
@@ -32,6 +62,7 @@ async def handle(
 
     if not settings.hubspot_configured:
         logger.info("HubSpot not configured — lead logged locally: %s", arguments.get("email"))
+        await _mirror_lead_to_supabase(arguments, session_id, visitor_id)
         return {
             "status": "queued",
             "message": "Lead recorded; CRM sync pending configuration.",
@@ -85,4 +116,10 @@ async def handle(
             meta.visitor_name = arguments.get("name") or meta.visitor_name
             await redis.save_visitor_metadata(visitor_id, meta)
 
+    await _mirror_lead_to_supabase(
+        arguments,
+        session_id,
+        visitor_id,
+        hubspot_id=str(data.get("id")) if data.get("id") else None,
+    )
     return {"status": "created", "hubspot_id": data.get("id"), "email": arguments.get("email")}

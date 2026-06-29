@@ -81,3 +81,11 @@ def embed_query(query: str) -> list[float]:
     if settings.embedding_provider == "openai":
         return embed_texts([query], for_query=True)[0]
     return _embed_local_query(query)
+
+
+def warmup_embedding_model() -> None:
+    """Load local BGE model at startup to avoid cold-start on first rag_query."""
+    if settings.embedding_provider != "local":
+        return
+    _get_bge_model()
+    logger.info("Embedding model warmed up: %s", settings.embedding_model)

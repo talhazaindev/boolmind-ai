@@ -134,6 +134,49 @@ def tools_from_events(events: list[dict[str, Any]]) -> list[str]:
     return seen
 
 
+def telemetry_from_events(events: list[dict[str, Any]]) -> dict[str, Any]:
+    """Extract tool latency/outcome and error counts from SSE events."""
+    tool_results: list[dict[str, Any]] = []
+    timeouts = 0
+    fallbacks = 0
+    for e in events:
+        if e.get("type") != "tool_result":
+            continue
+        entry = {
+            "tool": e.get("tool"),
+            "outcome": e.get("outcome"),
+            "duration_ms": e.get("duration_ms"),
+        }
+        tool_results.append(entry)
+        if e.get("outcome") == "timeout":
+            timeouts += 1
+        result = e.get("result") or {}
+        if isinstance(result, dict) and result.get("fallback"):
+            fallbacks += 1
+    return {
+        "tool_results": tool_results,
+        "timeout_count": timeouts,
+        "fallback_count": fallbacks,
+        "rate_limited": any(
+            ev.get("type") == "error" and ev.get("code") == "RATE_LIMIT" for ev in events
+        ),
+    }
+
+
+def fetch_session_events(client: httpx.Client, session_id: str) -> list[dict[str, Any]]:
+    """Load Supabase chat_events audit trail for a test session."""
+    try:
+        r = client.get(
+            f"{BASE}/api/admin/sessions/{session_id}/events",
+            timeout=15.0,
+        )
+        if r.status_code != 200:
+            return []
+        return r.json().get("events") or []
+    except Exception:
+        return []
+
+
 def check_contains(text: str, keywords: list[str]) -> tuple[bool, list[str]]:
     lower = text.lower()
     missing = [k for k in keywords if k.lower() not in lower]
@@ -504,6 +547,23 @@ def evaluate_case(case: dict[str, Any], events: list[dict], text: str, status: i
                     ok = False
                     notes.append("tour result empty")
 
+    telem = telemetry_from_events(events)
+    if telem["tool_results"]:
+        latencies = [
+            tr["duration_ms"]
+            for tr in telem["tool_results"]
+            if tr.get("duration_ms") is not None
+        ]
+        if latencies:
+            notes.append(f"tool_latency_ms={latencies}")
+        outcomes = [tr.get("outcome") for tr in telem["tool_results"] if tr.get("outcome")]
+        if outcomes:
+            notes.append(f"outcomes={outcomes}")
+    if telem["timeout_count"]:
+        notes.append(f"timeouts={telem['timeout_count']}")
+    if telem["fallback_count"]:
+        notes.append(f"fallbacks={telem['fallback_count']}")
+
     st = "PASS" if ok else "PARTIAL" if text else "FAIL"
     return CaseResult(tid, st, tools, text[:400], notes, status)
 
@@ -529,10 +589,30 @@ def run_infrastructure(client: httpx.Client) -> list[CaseResult]:
     try:
         a = client.get(f"{BASE}/api/admin/stats", timeout=10).json()
         results.append(
-            CaseResult("INFRA-admin", "PASS", [], json.dumps(a)[:200], ["admin stats ok"])
+            CaseResult(
+                "INFRA-admin",
+                "PASS" if a.get("telemetryEnabled") is not None else "PARTIAL",
+                [],
+                json.dumps(a)[:200],
+                [f"telemetry={a.get('telemetryEnabled')}", "admin stats ok"],
+            )
         )
     except Exception as e:
         results.append(CaseResult("INFRA-admin", "ERROR", [], "", [str(e)]))
+
+    try:
+        m = client.get(f"{BASE}/api/admin/metrics/summary", timeout=10).json()
+        results.append(
+            CaseResult(
+                "INFRA-metrics",
+                "PASS",
+                [],
+                json.dumps(m)[:200],
+                [f"turns_1h={m.get('turn_count', 0)}"],
+            )
+        )
+    except Exception as e:
+        results.append(CaseResult("INFRA-metrics", "ERROR", [], "", [str(e)]))
 
     for i, (label, url, pid) in enumerate(
         [
@@ -669,6 +749,22 @@ def run_thread(
             results.append(CaseResult(case["id"], "ERROR", [], "", [str(e)]))
         print(f"    -> {results[-1].status} tools={results[-1].tools_seen}")
 
+    audit = fetch_session_events(client, session_id)
+    if audit:
+        event_types = [e.get("event_type") for e in audit]
+        results.append(
+            CaseResult(
+                f"{thread.name}-audit",
+                "PASS",
+                [],
+                "",
+                [
+                    f"session_events={len(audit)}",
+                    f"types={event_types[:12]}",
+                ],
+            )
+        )
+
     return results
 
 
@@ -713,6 +809,28 @@ def write_report(all_results: list[CaseResult], path: Path) -> None:
             f"| Resend | {settings.resend_configured} |",
             f"| Supabase | {settings.supabase_configured} |",
             f"| HMAC (`CHAT_API_SECRET`) | {bool(settings.chat_api_secret)} |",
+            "",
+            "## Telemetry summary (from case notes)",
+            "",
+            "| ID | Tool latencies (ms) | Outcomes | Timeouts | Fallbacks |",
+            "|----|---------------------|----------|----------|-----------|",
+        ]
+    )
+
+    for r in all_results:
+        lat = next((n for n in r.notes if n.startswith("tool_latency_ms=")), "")
+        out = next((n for n in r.notes if n.startswith("outcomes=")), "")
+        to = next((n for n in r.notes if n.startswith("timeouts=")), "")
+        fb = next((n for n in r.notes if n.startswith("fallbacks=")), "")
+        if lat or out or to or fb:
+            lines.append(
+                f"| {r.test_id} | {lat.replace('tool_latency_ms=', '')} | "
+                f"{out.replace('outcomes=', '')} | {to.replace('timeouts=', '')} | "
+                f"{fb.replace('fallbacks=', '')} |"
+            )
+
+    lines.extend(
+        [
             "",
             "## Detailed results",
             "",

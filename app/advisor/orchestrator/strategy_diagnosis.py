@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from app.advisor.orchestrator.industry_strategy import (
     business_label,
     is_local_footprint,
@@ -210,6 +212,31 @@ def growth_diagnostic_question(
     return diagnostic_question(meta, message, history)
 
 
+_OPS_PREEMPT_SIGNALS = (
+    "delay",
+    "delays",
+    "backlog",
+    "bottleneck",
+    "compliance review",
+    "account opening",
+    "turnaround",
+    "approval time",
+    "waiting for approval",
+    "move between",
+    "handoff",
+)
+
+
+def _has_growth_signal(blob: str) -> bool:
+    for kw in _GROWTH_SIGNALS:
+        if kw in ("grow", "growth"):
+            if re.search(rf"\b{re.escape(kw)}\b", blob):
+                return True
+        elif kw in blob:
+            return True
+    return False
+
+
 def infer_growth_blocker(
     meta: SessionMetadata,
     message: str = "",
@@ -219,11 +246,13 @@ def infer_growth_blocker(
         return meta.growth_blocker
 
     blob = _blob(meta, message, history or [])
+    if any(kw in blob for kw in _OPS_PREEMPT_SIGNALS):
+        return "unknown"
     if any(kw in blob for kw in ("returning less", "churn", "retention", "keep customers")):
         return "retention"
     if any(kw in blob for kw in ("visit but don't", "don't convert", "look but don't", "no foot traffic from")):
         return "conversion"
-    if channels_underperforming(message, history) or any(kw in blob for kw in _GROWTH_SIGNALS):
+    if channels_underperforming(message, history) or _has_growth_signal(blob):
         return "discovery"
     return "unknown"
 

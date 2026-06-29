@@ -96,6 +96,10 @@ _RETENTION_SIGNALS = (
     "repeat business",
     "coming back",
     "keep customers",
+    "retention has dropped",
+    "retention dropped",
+    "declining retention",
+    "customer retention",
 )
 
 _WORKFORCE_SIGNALS = (
@@ -206,6 +210,10 @@ def detect_problem_dimension(
     profit_hits = sum(1 for s in _PROFITABILITY_SIGNALS if s in blob)
     efficiency_hits = sum(1 for s in _EFFICIENCY_SIGNALS if s in blob)
     retention_hits = sum(1 for s in _RETENTION_SIGNALS if s in blob)
+
+    # Customer retention decline — even when revenue grows or teams debate pricing
+    if retention_hits >= 1 and not _is_workforce_context(blob):
+        return "retention"
 
     # User names pricing/profit → profitability dimension (even if team is busy)
     if "pricing" in user_hypotheses or profit_hits >= 1:

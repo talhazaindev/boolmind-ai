@@ -1,0 +1,864 @@
+[
+  {
+    "name": "logistics_bottleneck",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We run a logistics company. Orders are growing but dispatch delays are getting worse.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "timeout",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "We dispatch around 1,500 shipments per day. Planning is done manually in spreadsheets by three coordinators. Drivers often wait 30\u201360 minutes during peak periods.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "What do you recommend?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "We are a manufacturing company with 40 employees.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "premature_solution_block",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We have operational inefficiencies and want to improve efficiency.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "What do you recommend we should do?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "product_compare",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "What's the difference between Retify and your Forecasting Engine in terms of workflow and use case?",
+        "http_status": 200,
+        "tools": [
+          "product_compare"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "product_compare",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "rag_concept",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "What does demand planning actually mean in plain language?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "custom_architecture",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We're building a two-sided marketplace for equipment rentals \u2014 bookings, payments, and vendor dashboards.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "Main pain is manual coordination between vendors and renters; we need to scale past 500 transactions per week.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "Goal is to automate intake, scheduling, and status tracking with a custom platform.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "We use Stripe for payments and need API integrations with our CRM.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "Can you design a system architecture for this? Include integrations and data flow.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "healthcare_compliance_bottleneck",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We're a 200-bed regional hospital group. Patient intake still relies on fax, phone callbacks, and shared Excel trackers across three sites.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "We process about 400 referrals per day. Authorization checks are manual \u2014 staff copy data between our EHR (Epic) and payer portals. Average delay is 2\u20133 business days before a patient gets scheduled.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "Compliance is non-negotiable: HIPAA audit trail, role-based access, and no PHI in external tools. Budget is tight but leadership will fund something that cuts authorization turnaround.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "What do you think is actually causing the delay \u2014 people, process, or systems?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "If we were to fix one bottleneck first, what would you prioritize and why?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "saas_churn_onboarding",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We're a B2B SaaS company \u2014 project management for construction firms. ~2,800 paying accounts, $4.2M ARR, mostly mid-market.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "Activation is the problem: only 38% of trials create a project in week one. CSMs manually onboard via Zoom; we can't scale that. Churn in month 2\u20133 is 11%.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "We use HubSpot CRM, Stripe billing, and Mixpanel. Product is React + Node on AWS. Sales wants faster time-to-value; engineering wants fewer one-off integrations.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "Compare what Boolmind could realistically help with versus what we should fix in-product first.",
+        "http_status": 200,
+        "tools": [
+          "product_compare"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "product_compare",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "What do you recommend \u2014 and what evidence would you need before proposing a custom build?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "partial_automation_logistics",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "Mid-size 3PL \u2014 we already have a TMS (MercuryGate) and GPS on trucks, but dispatch planning is still manual.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "About 900 shipments/day across two regions. Coordinators export TMS data to Excel, re-plan routes when drivers call in sick, then re-upload. Peak season adds 45\u201390 min driver idle time.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "We tried a route optimization plugin last year \u2014 adoption failed because coordinators didn't trust the black-box assignments.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "What bottleneck should we isolate first given we already have a TMS?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "What do you recommend?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "conflicting_priorities_manufacturing",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "Precision parts manufacturer \u2014 120 employees, two plants. ERP is SAP B1. Production scheduling is spreadsheet-driven; shop floor uses paper travelers.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "Leadership wants 20% throughput increase this year but also cut overtime by 15%. Quality escapes rose 8% last quarter when we pushed volume.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "IT budget is $180k. Union is sensitive to surveillance. We cannot rip-and-replace SAP mid-year.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "Which constraint is binding \u2014 capacity, planning visibility, or change management?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "Can you outline a phased approach without committing to a full MES yet?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  },
+  {
+    "name": "rapid_context_switch",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We run a food delivery marketplace in three cities \u2014 12k orders/day, own fleet plus gig drivers.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 2,
+        "message": "Actually wait \u2014 I'm also evaluating this for our separate B2B catering arm. Different ops: bulk orders, fixed routes, 48-hour lead times.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 3,
+        "message": "For the marketplace side: dispatch is the pain. For catering: kitchen prep coordination and slot booking.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 4,
+        "message": "Which context are you using right now \u2014 marketplace or catering?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      },
+      {
+        "turn": 5,
+        "message": "Focus on marketplace only. Drivers wait 25\u201340 minutes at peak; we use spreadsheets for surge planning.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": null,
+        "internal_mode": null,
+        "routing_confidence": null,
+        "rag_status": null,
+        "quality_passed": null,
+        "stage": null,
+        "resolution_trace": [],
+        "router_decision": null,
+        "decision_trace": null,
+        "flags": [],
+        "assistant_text": ""
+      }
+    ]
+  }
+]

@@ -33,6 +33,12 @@ async def handle(arguments: dict[str, Any]) -> dict[str, Any]:
         },
     }
     if not settings.calcom_configured:
+        await queue_failed_operation(
+            "calendar_book_slot",
+            arguments,
+            "Cal.com not configured",
+            session_id=arguments.get("session_id"),
+        )
         return {
             "status": "queued",
             "booking_uid": f"mock-{arguments['email'][:8]}",
@@ -62,5 +68,10 @@ async def handle(arguments: dict[str, Any]) -> dict[str, Any]:
         }
     except Exception as e:
         logger.exception("Cal.com book failed: %s", e)
-        await queue_failed_operation("calendar_book_slot", arguments, str(e))
+        await queue_failed_operation(
+            "calendar_book_slot",
+            arguments,
+            str(e),
+            session_id=arguments.get("session_id"),
+        )
         return {"status": "fallback", "message": FALLBACK_BOOKING, "start": arguments["start"]}
