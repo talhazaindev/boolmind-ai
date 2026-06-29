@@ -1,0 +1,210 @@
+# Boolmind AI — local full stack (Redis + Pinecone Local + API).
+#
+#   cp .env.docker.example .env   # add GROQ_API_KEY
+#   docker compose up -d --build
+#   open http://localhost:8000/advisor
+#
+# Cloud-only (Upstash + hosted Pinecone): use docker-compose.cloud.yml
+#
+# Profiles: gpu (FIDP CUDA), voice (Chatterbox TTS), seed (one-shot RAG ingest)
+
+name: boolmind-ai
+
+x-advisor-common: &advisor-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: boolmind-ai/advisor-api:latest
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    - huggingface-cache:/data/huggingface
+    - fidp-output:/data/fidp-output
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: unless-stopped
+
+x-advisor-local-env: &advisor-local-env
+  REDIS_BACKEND: local
+  REDIS_URL: redis://redis:6379/0
+  PINECONE_MODE: local
+  PINECONE_API_KEY: pclocal
+  PINECONE_HOST: pinecone.local
+  PINECONE_PORT: "5081"
+  PINECONE_INDEX_NAME: boolmind-knowledge-bge
+  EMBEDDING_PROVIDER: local
+  EMBEDDING_DIMENSION: "384"
+  IMAGE_GEN_PROVIDER: mock
+  HF_HOME: /data/huggingface
+  FIDP_OUTPUT_DIR: /data/fidp-output
+  CHATTERBOX_TTS_URL: ${CHATTERBOX_TTS_URL:-http://host.docker.internal:4123}
+  LLM_PROVIDER: ollama
+  OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
+  OLLAMA_MODEL: qwen3:14b
+  TELEMETRY_JSON_LOGS: "true"
+  ADVISOR_DEBUG_ROUTER: "true"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: boolmind-redis
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  pinecone:
+    image: ghcr.io/pinecone-io/pinecone-index:latest
+    container_name: boolmind-pinecone
+    environment:
+      PORT: 5081
+      INDEX_TYPE: serverless
+      VECTOR_TYPE: dense
+      DIMENSION: 384
+      METRIC: cosine
+    ports:
+      - "${PINECONE_PORT:-5081}:5081"
+    platform: linux/amd64
+    restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - pinecone.local
+
+  # ---------------------------------------------------------------------------
+  # Application
+  # ---------------------------------------------------------------------------
+  advisor-api:
+    <<: *advisor-common
+    container_name: boolmind-advisor-api
+    ports:
+      - "${ADVISOR_PORT:-8000}:8000"
+    environment:
+      <<: *advisor-local-env
+    depends_on:
+      redis:
+        condition: service_healthy
+      pinecone:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+  # One-shot knowledge ingest (after stack is up):
+  #   docker compose --profile seed run --rm ingest --namespace retify
+  ingest:
+    <<: *advisor-common
+    profiles: ["seed"]
+    container_name: boolmind-ingest
+    environment:
+      <<: *advisor-local-env
+    depends_on:
+      redis:
+        condition: service_healthy
+      pinecone:
+        condition: service_started
+    entrypoint: ["python", "scripts/run_ingest.py"]
+    command: ["--namespace", "retify"]
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # Optional profiles
+  # ---------------------------------------------------------------------------
+  advisor-api-gpu:
+    profiles: ["gpu"]
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    image: boolmind-ai/advisor-api-gpu:latest
+    container_name: boolmind-advisor-api-gpu
+    ports:
+      - "${ADVISOR_GPU_PORT:-8001}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      <<: *advisor-local-env
+      IMAGE_GEN_PROVIDER: local
+    volumes:
+      - huggingface-cache:/data/huggingface
+      - fidp-output:/data/fidp-output
+    depends_on:
+      redis:
+        condition: service_healthy
+      pinecone:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+  chatterbox-tts:
+    profiles: ["voice"]
+    image: chatterbox-tts-api:local
+    container_name: boolmind-chatterbox-tts
+    ports:
+      - "${CHATTERBOX_PORT:-4123}:4123"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Monitoring (optional): docker compose --profile monitoring up -d
+  # Grafana http://localhost:3001  Prometheus http://localhost:9090
+  # ---------------------------------------------------------------------------
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:v2.54.1
+    container_name: boolmind-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      advisor-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    profiles: ["monitoring"]
+    image: grafana/grafana:11.2.0
+    container_name: boolmind-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  huggingface-cache:
+  fidp-output:

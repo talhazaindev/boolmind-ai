@@ -1,0 +1,53 @@
+{
+  "productId": "ecg",
+  "productName": "ECG Document Intelligence",
+  "tagline": "From scanned ECG documents to EMR-ready clinical data in 7 steps",
+  "totalSteps": 5,
+  "steps": [
+    {
+      "step": 1,
+      "title": "Classify Inputs",
+      "body": "Automatically detect whether each file is a scanned PDF, image, CSV export, WFDB, or EDF waveform — and route to the right pipeline.",
+      "visualType": "diagram",
+      "visualContent": "PDF / Image / CSV / Waveform → classifier → pipeline branch",
+      "highlightStat": "5 input families supported",
+      "workflowStepRef": "Step 1 — File Classification"
+    },
+    {
+      "step": 2,
+      "title": "Image Preprocessing",
+      "body": "Enhance scans, correct skew, remove grid lines, and reduce noise before OCR on 12-lead printouts and Holter summaries.",
+      "visualType": "workflow",
+      "visualContent": "Preprocessing chain for low-quality clinical scans.",
+      "highlightStat": "Tuned for clinical ECG images",
+      "workflowStepRef": "Step 2 — ECG Image Preprocessing"
+    },
+    {
+      "step": 3,
+      "title": "Clinical OCR & Extraction",
+      "body": "Multilingual OCR plus rule-based and semantic extraction pulls intervals, rates, and segments from document text.",
+      "visualType": "stat",
+      "visualContent": "QRS, RR, QT, ST, heart rate where present in source.",
+      "highlightStat": "Multilingual clinical OCR",
+      "workflowStepRef": "Steps 3–4 — OCR and Clinical Field Extraction"
+    },
+    {
+      "step": 4,
+      "title": "Normalize for EMR",
+      "body": "Map naming variations, validate clinical ranges, and output standardized schema ready for EMR or analytics pipelines.",
+      "visualType": "workflow",
+      "visualContent": "Normalized JSON with validation metadata.",
+      "highlightStat": "EMR-ready standardized output",
+      "workflowStepRef": "Steps 5–6 — Mapping and Normalization"
+    },
+    {
+      "step": 5,
+      "title": "Continuous Learning",
+      "body": "Offline training on diverse ECG datasets improves accuracy and language coverage over time without blocking production ingest.",
+      "visualType": "diagram",
+      "visualContent": "Feedback loop from validated outputs to model refresh.",
+      "highlightStat": "Improving accuracy over time",
+      "workflowStepRef": "Step 7 — Continuous Learning"
+    }
+  ]
+}

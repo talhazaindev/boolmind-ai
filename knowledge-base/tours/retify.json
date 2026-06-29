@@ -1,0 +1,53 @@
+{
+  "productId": "retify",
+  "productName": "Retify — Retail Data Unification",
+  "tagline": "From scattered retail data to unified insights in 10 steps",
+  "totalSteps": 5,
+  "steps": [
+    {
+      "step": 1,
+      "title": "Ingest Everything",
+      "body": "Connect CSV, Excel, PDF receipts, images, JSON, SQL dumps, and ERP logs. Retify extracts structured data from every format using format-specific parsers and OCR.",
+      "visualType": "diagram",
+      "visualContent": "flowchart LR; A[CSV] --> R[Retify]; B[PDF] --> R; C[ERP] --> R;",
+      "highlightStat": "50+ source formats supported",
+      "workflowStepRef": "Step 1 — Multi-Format Ingestion"
+    },
+    {
+      "step": 2,
+      "title": "AI Schema Detection",
+      "body": "AI infers field meanings, data types, and units without manual mapping. New store rollouts inherit detected schemas automatically.",
+      "visualType": "workflow",
+      "visualContent": "Schema detection maps raw columns to canonical retail entities.",
+      "highlightStat": "No manual schema mapping",
+      "workflowStepRef": "Step 2 — AI-Powered Schema Detection"
+    },
+    {
+      "step": 3,
+      "title": "Entity Matching",
+      "body": "Match products, customers, and stores across sources into golden records that remove duplicates and align hierarchies.",
+      "visualType": "stat",
+      "visualContent": "Golden records unify SKU and store identifiers.",
+      "highlightStat": "Cross-source entity resolution",
+      "workflowStepRef": "Step 4 — Entity Matching"
+    },
+    {
+      "step": 4,
+      "title": "Quality Diagnosis",
+      "body": "Automated profiling finds missing fields, anomalies, and compliance issues before data reaches your warehouse.",
+      "visualType": "workflow",
+      "visualContent": "Quality scores and issue reports per dataset.",
+      "highlightStat": "Proactive data quality",
+      "workflowStepRef": "Step 5 — Data Quality Diagnosis"
+    },
+    {
+      "step": 5,
+      "title": "NLP Insights",
+      "body": "Store managers and analysts query unified retail data in natural language — converted to SQL with charts and summaries.",
+      "visualType": "diagram",
+      "visualContent": "Chatbot queries over unified warehouse tables.",
+      "highlightStat": "Natural language to SQL",
+      "workflowStepRef": "Step 10 — NLP Insights"
+    }
+  ]
+}

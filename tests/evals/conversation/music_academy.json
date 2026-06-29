@@ -1,0 +1,47 @@
+{
+  "scenario": "music_academy",
+  "description": "Non-technical music academy owner seeking online presence advice",
+  "turns": [
+  {
+    "user": "I am running a music academy but now I want to make an online presence as well",
+    "expect_mode": "discover"
+  },
+  {
+    "user": "I want more people to discover the academy online and maybe enroll without visiting physically",
+    "expect_mode": "discover"
+  },
+  {
+    "user": "Do I need a full custom platform, or would a simple website be enough to start with?",
+    "expect_mode": "advise",
+    "expect_intent": "advice_request"
+  },
+  {
+    "user": "I'm not technical at all. What would you recommend?",
+    "expect_mode": "advise",
+    "expect_sophistication": "low"
+  },
+  {
+    "user": "If you were advising your own client, what would you recommend in the next 3 months?",
+    "expect_mode": "advise",
+    "expect_should_recommend": true
+  },
+  {
+    "user": "What makes Boolmind different from Wix or hiring a freelancer?",
+    "expect_mode": "advise",
+    "expect_intent": "objection"
+  },
+  {
+    "user": "If a custom platform costs $5000, how would you calculate whether it's worth it?",
+    "expect_mode": "advise",
+    "expect_intent": "roi_analysis"
+  }
+  ],
+  "pass_criteria": {
+    "max_consecutive_question_turns": 2,
+    "advise_mode_requires_boolmind_reference": true,
+    "no_rbac_before_turn": 8,
+    "roi_turn_explains_framework_first": true,
+    "no_email_before_turn": 8,
+    "no_diy_as_primary_in_advise_recommend": true
+  }
+}

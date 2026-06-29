@@ -1,0 +1,15 @@
+{
+  "scenario": "accounting_growth",
+  "description": "Accounting firm seeking customer discovery, not ops advice",
+  "turns": [
+    {
+      "user": "We provide accounting and bookkeeping services for small businesses.",
+      "expect_primary_goal": "growth_marketing"
+    }
+  ],
+  "pass_criteria": {
+    "no_document_management_questions": true,
+    "no_catalog_product_routing": true,
+    "growth_channels_mentioned": ["Google", "LinkedIn", "referral", "reviews", "SEO"]
+  }
+}

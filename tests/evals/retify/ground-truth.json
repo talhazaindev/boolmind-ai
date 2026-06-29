@@ -1,0 +1,243 @@
+[
+  {
+    "id": "retify-01",
+    "query": "retify workflow steps count",
+    "namespace": "retify",
+    "must_contain": [
+      "10"
+    ]
+  },
+  {
+    "id": "retify-02",
+    "query": "Retify multi-format ingestion CSV PDF",
+    "namespace": "retify",
+    "must_contain": [
+      "CSV",
+      "PDF"
+    ]
+  },
+  {
+    "id": "retify-03",
+    "query": "Retify entity matching golden records",
+    "namespace": "retify",
+    "must_contain": [
+      "entity"
+    ]
+  },
+  {
+    "id": "retify-04",
+    "query": "Retify schema detection AI",
+    "namespace": "retify",
+    "must_contain": [
+      "schema"
+    ]
+  },
+  {
+    "id": "retify-05",
+    "query": "Retify NLP insights natural language",
+    "namespace": "retify",
+    "must_contain": [
+      "NLP"
+    ]
+  },
+  {
+    "id": "retify-06",
+    "query": "Retify data quality diagnosis",
+    "namespace": "retify",
+    "must_contain": [
+      "quality"
+    ]
+  },
+  {
+    "id": "retify-07",
+    "query": "Retify retail POS ERP",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-08",
+    "query": "Retify relationship detection",
+    "namespace": "retify",
+    "must_contain": [
+      "relationship"
+    ]
+  },
+  {
+    "id": "retify-09",
+    "query": "Retify harmonization step",
+    "namespace": "retify",
+    "must_contain": [
+      "harmon"
+    ]
+  },
+  {
+    "id": "retify-10",
+    "query": "Retify 10 step pipeline",
+    "namespace": "retify",
+    "must_contain": [
+      "10"
+    ]
+  },
+  {
+    "id": "retify-11",
+    "query": "Retify retail data question 11",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-12",
+    "query": "Retify retail data question 12",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-13",
+    "query": "Retify retail data question 13",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-14",
+    "query": "Retify retail data question 14",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-15",
+    "query": "Retify retail data question 15",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-16",
+    "query": "Retify retail data question 16",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-17",
+    "query": "Retify retail data question 17",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-18",
+    "query": "Retify retail data question 18",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-19",
+    "query": "Retify retail data question 19",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-20",
+    "query": "Retify retail data question 20",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-21",
+    "query": "Retify retail data question 21",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-22",
+    "query": "Retify retail data question 22",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-23",
+    "query": "Retify retail data question 23",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-24",
+    "query": "Retify retail data question 24",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-25",
+    "query": "Retify retail data question 25",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-26",
+    "query": "Retify retail data question 26",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-27",
+    "query": "Retify retail data question 27",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-28",
+    "query": "Retify retail data question 28",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  },
+  {
+    "id": "retify-29",
+    "query": "Retify retail data question 29",
+    "namespace": "retify",
+    "must_contain": [
+      "retify"
+    ]
+  },
+  {
+    "id": "retify-30",
+    "query": "Retify retail data question 30",
+    "namespace": "retify",
+    "must_contain": [
+      "retail"
+    ]
+  }
+]

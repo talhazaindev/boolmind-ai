@@ -1,0 +1,53 @@
+{
+  "productId": "legal",
+  "productName": "Legal Data Fusion",
+  "tagline": "From scattered legal datasets to golden records in 6 steps",
+  "totalSteps": 5,
+  "steps": [
+    {
+      "step": 1,
+      "title": "Ingest Datasets",
+      "body": "Select contracts, matters, billing, or regulatory exports from catalog or upload CSV, JSON, and XLSX without upfront transformation.",
+      "visualType": "diagram",
+      "visualContent": "CSV / JSON / XLSX → ingest catalog",
+      "highlightStat": "Heterogeneous legal sources",
+      "workflowStepRef": "Step 1 — Ingest"
+    },
+    {
+      "step": 2,
+      "title": "Semantic Discovery",
+      "body": "LLM-generated metadata describes each dataset and column so downstream clustering understands business meaning, not just headers.",
+      "visualType": "workflow",
+      "visualContent": "Flat JSON + semantic field descriptions.",
+      "highlightStat": "LLM semantic metadata",
+      "workflowStepRef": "Step 2 — Discovery"
+    },
+    {
+      "step": 3,
+      "title": "Cluster Related Sources",
+      "body": "Group datasets that represent the same business concept using semantic comparison and leader–follower clustering.",
+      "visualType": "stat",
+      "visualContent": "Clusters of related legal datasets.",
+      "highlightStat": "Automatic concept grouping",
+      "workflowStepRef": "Step 3 — Clustering"
+    },
+    {
+      "step": 4,
+      "title": "Diagnose & Resolve",
+      "body": "LLM agents flag type mismatches and bad mappings; humans accept fixes and define rules in the resolution step.",
+      "visualType": "workflow",
+      "visualContent": "Issue list with severity + HITL review.",
+      "highlightStat": "Human-in-the-loop quality",
+      "workflowStepRef": "Steps 4–5 — Diagnosis and Resolution"
+    },
+    {
+      "step": 5,
+      "title": "Golden Record Fusion",
+      "body": "Proposed Golden Schema per cluster merges columns with conflict logs and full lineage for chatbot-ready harmonized data.",
+      "visualType": "diagram",
+      "visualContent": "Golden records with source traceability.",
+      "highlightStat": "Traceable golden records",
+      "workflowStepRef": "Step 6 — Golden Record Fusion"
+    }
+  ]
+}

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boolmind Advisor</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: #0f1629;
+      color: #e8e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 1rem;
+    }
+    .panel {
+      width: 100%;
+      max-width: 420px;
+      height: 600px;
+      background: #fff;
+      color: #1a1a1a;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #5B4FD6, #3DBDD6);
+      color: #fff;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+    button.clear-chat {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      cursor: pointer;
+    }
+    button.clear-chat:hover:not(:disabled) {
+      background: rgba(255,255,255,0.22);
+    }
+    button.clear-chat:disabled { opacity: 0.45; cursor: not-allowed; }
+    .header h1 { margin: 0; font-size: 1rem; font-weight: 600; }
+    .status { font-size: 0.7rem; opacity: 0.9; }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #fafafa;
+    }
+    .bubble {
+      max-width: 85%;
+      padding: 0.65rem 0.9rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: #5B4FD6;
+      color: #fff;
+    }
+    .bubble.assistant {
+      align-self: flex-start;
+      background: #F4F4F4;
+      color: #1a1a1a;
+    }
+    .bubble.system {
+      align-self: center;
+      background: #e8e4ff;
+      color: #333;
+      font-size: 0.8rem;
+      max-width: 95%;
+    }
+    .tour-card {
+      align-self: flex-start;
+      max-width: 95%;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 1rem;
+      background: #fff;
+    }
+    .tour-card h3 { margin: 0 0 0.5rem; font-size: 0.95rem; color: #5B4FD6; }
+    .tour-nav { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+    .tour-nav button {
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #5B4FD6;
+      background: #fff;
+      color: #5B4FD6;
+      cursor: pointer;
+    }
+    .typing { color: #888; font-size: 0.8rem; padding: 0 1rem; }
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-top: 1px solid #eee;
+      background: #fff;
+    }
+    textarea {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      resize: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      min-height: 2.5rem;
+      max-height: 5rem;
+    }
+    button.send {
+      background: #5B4FD6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .product-select {
+      margin-top: 0.35rem;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .bubble .product-tag {
+      display: block;
+      font-size: 0.65rem;
+      color: #5B4FD6;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .compare-table {
+      align-self: flex-start;
+      max-width: 98%;
+      font-size: 0.75rem;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .compare-table th, .compare-table td {
+      border: 1px solid #eee;
+      padding: 0.4rem 0.5rem;
+      vertical-align: top;
+    }
+    .compare-table th { background: #f0eeff; color: #5B4FD6; }
+    .fidp-card {
+      align-self: flex-start;
+      max-width: 95%;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 0.75rem;
+      background: #fff;
+    }
+    .fidp-card img {
+      display: block;
+      max-width: 100%;
+      border-radius: 8px;
+      height: auto;
+    }
+    .fidp-card .fidp-caption {
+      margin: 0.5rem 0 0;
+      font-size: 0.75rem;
+      color: #666;
+    }
+    .workflow-visual {
+      align-self: flex-start;
+      max-width: 98%;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 0.75rem;
+      background: #fff;
+    }
+    .workflow-visual h4 {
+      margin: 0 0 0.35rem;
+      font-size: 0.85rem;
+      color: #5B4FD6;
+    }
+    .workflow-visual .draft-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #8a6d00;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+    .workflow-visual .mermaid-wrap {
+      overflow-x: auto;
+      padding: 0.25rem 0;
+    }
+    .workflow-visual .visual-caption {
+      margin: 0.5rem 0 0;
+      font-size: 0.72rem;
+      color: #666;
+      line-height: 1.35;
+    }
+    .proactive-toast {
+      position: fixed;
+      bottom: 620px;
+      max-width: 380px;
+      background: #fff;
+      color: #333;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      font-size: 0.85rem;
+      z-index: 100;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="header">
+      <div>
+        <h1>Boolmind Advisor</h1>
+        <div class="status" id="productBadge">Online</div>
+        <select class="product-select" id="productSelect" title="Focus product context">
+          <option value="">All products</option>
+          <option value="retify">Retify</option>
+          <option value="ecg">ECG</option>
+          <option value="legal">Legal</option>
+        </select>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="clear-chat" id="clearBtn" title="Start a new conversation">Clear chat</button>
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="typing" id="typing" hidden>Thinking…</div>
+    <div class="input-row">
+      <textarea id="input" rows="1" placeholder="Ask about Retify, ECG, or Legal Data Fusion…"></textarea>
+      <button class="send" id="sendBtn">Send</button>
+    </div>
+  </div>
+  <script>
+    const API = '';
+    const PRODUCT_NAMES = {
+      retify: 'Retify — Retail Data Unification',
+      ecg: 'ECG Document Intelligence',
+      legal: 'Legal Data Fusion',
+    };
+    let sessionId = null;
+    let visitorId = localStorage.getItem('boolmind_vid');
+    let streaming = false;
+    let currentTour = null;
+    let tourStepIdx = 0;
+    let activeProduct = null;
+    let proactiveTriggers = [];
+    const proactiveFired = new Set();
+
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingEl = document.getElementById('typing');
+    const productBadge = document.getElementById('productBadge');
+    const productSelect = document.getElementById('productSelect');
+    const clearBtn = document.getElementById('clearBtn');
+
+    if (window.mermaid) {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'neutral',
+        securityLevel: 'strict',
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+      });
+    }
+
+    let mermaidRenderSeq = 0;
+
+    function pageContext() {
+      const path = window.location.pathname || '/';
+      const params = new URLSearchParams(window.location.search);
+      let productId = productSelect.value || params.get('product') || null;
+      if (path.includes('retify')) productId = productId || 'retify';
+      if (path.includes('ecg')) productId = productId || 'ecg';
+      if (path.includes('legal')) productId = productId || 'legal';
+      if (activeProduct && !productId) productId = activeProduct;
+      return {
+        title: document.title,
+        url: window.location.href,
+        product_id: productId,
+        product_name: productId ? PRODUCT_NAMES[productId] || productId : null,
+      };
+    }
+
+    function setActiveProduct(pid) {
+      activeProduct = pid || null;
+      if (pid && PRODUCT_NAMES[pid]) {
+        productBadge.textContent = PRODUCT_NAMES[pid];
+        productSelect.value = pid;
+      } else {
+        productBadge.textContent = 'Boolmind Advisor';
+        productSelect.value = '';
+      }
+    }
+
+    function addBubble(role, text, productLabel) {
+      const div = document.createElement('div');
+      div.className = 'bubble ' + role;
+      if (role === 'assistant' && productLabel) {
+        const tag = document.createElement('span');
+        tag.className = 'product-tag';
+        tag.textContent = productLabel;
+        div.appendChild(tag);
+      }
+      const body = document.createElement('span');
+      body.textContent = text;
+      div.appendChild(body);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return body.parentElement === div ? div : body;
+    }
+
+    function renderWorkflowVisual(evt) {
+      const mermaidSrc = evt.mermaid || '';
+      if (!mermaidSrc || !window.mermaid) return;
+      const card = document.createElement('div');
+      card.className = 'workflow-visual';
+      if (evt.isDraft !== false) {
+        const badge = document.createElement('span');
+        badge.className = 'draft-badge';
+        badge.textContent = 'Draft sketch';
+        card.appendChild(badge);
+      }
+      if (evt.title) {
+        const title = document.createElement('h4');
+        title.textContent = evt.title;
+        card.appendChild(title);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'mermaid-wrap';
+      const diagram = document.createElement('div');
+      diagram.className = 'mermaid';
+      const renderId = 'mmd-' + (++mermaidRenderSeq);
+      diagram.id = renderId;
+      wrap.appendChild(diagram);
+      card.appendChild(wrap);
+      if (evt.caption) {
+        const caption = document.createElement('p');
+        caption.className = 'visual-caption';
+        caption.textContent = evt.caption;
+        card.appendChild(caption);
+      }
+      messagesEl.appendChild(card);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      mermaid.render(renderId + '-svg', mermaidSrc).then(function(res) {
+        diagram.innerHTML = res.svg;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }).catch(function() {
+        diagram.textContent = 'Could not render workflow diagram.';
+      });
+    }
+
+    function renderFidp(result) {
+      const url = result.imageUrl;
+      if (!url) return;
+      const card = document.createElement('div');
+      card.className = 'fidp-card';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'Interface preview';
+      img.loading = 'lazy';
+      card.appendChild(img);
+      const caption = document.createElement('p');
+      caption.className = 'fidp-caption';
+      if (result.status === 'placeholder') {
+        caption.textContent = result.message || 'Preview placeholder';
+      } else {
+        caption.textContent = 'Visual preview' + (result.product ? ' — ' + result.product : '');
+      }
+      card.appendChild(caption);
+      messagesEl.appendChild(card);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderComparison(result) {
+      const rows = result.rows || [];
+      if (!rows.length) return;
+      const table = document.createElement('table');
+      table.className = 'compare-table';
+      table.innerHTML = '<thead><tr><th>Product</th><th>Knowledge base excerpt</th></tr></thead>';
+      const tbody = document.createElement('tbody');
+      rows.forEach((row) => {
+        const tr = document.createElement('tr');
+        const excerpt = (row.excerpt || '').slice(0, 280);
+        tr.innerHTML = `<td><strong>${row.productName || row.productId}</strong></td><td>${excerpt}…</td>`;
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      messagesEl.appendChild(table);
+      if (result.note) addBubble('system', result.note);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showProactiveToast(trigger) {
+      if (proactiveFired.has(trigger.id)) return;
+      proactiveFired.add(trigger.id);
+      const toast = document.createElement('div');
+      toast.className = 'proactive-toast';
+      toast.textContent = trigger.message;
+      toast.addEventListener('click', () => {
+        toast.remove();
+        if (trigger.action === 'suggest_tour' && trigger.productId) {
+          inputEl.value = `Give me a tour of ${PRODUCT_NAMES[trigger.productId] || trigger.productId}`;
+          sendMessage();
+        } else if (trigger.action === 'suggest_compare') {
+          inputEl.value = 'Compare Retify, ECG, and Legal Data Fusion for my use case';
+          sendMessage();
+        } else {
+          inputEl.focus();
+        }
+      });
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 12000);
+    }
+
+    function setupProactiveTriggers(triggers) {
+      proactiveTriggers = triggers || [];
+      proactiveTriggers.forEach((t) => {
+        if (t.type === 'scroll_depth') {
+          window.addEventListener('scroll', () => {
+            const depth = window.scrollY / Math.max(document.body.scrollHeight - window.innerHeight, 1);
+            if (depth >= (t.threshold || 0.55)) showProactiveToast(t);
+          }, { passive: true });
+        }
+        if (t.type === 'dwell_seconds' || t.type === 'idle_seconds') {
+          const ms = (t.seconds || 10) * 1000;
+          setTimeout(() => showProactiveToast(t), ms);
+        }
+        if (t.type === 'exit_intent') {
+          document.addEventListener('mouseout', (e) => {
+            if (e.clientY <= 0) showProactiveToast(t);
+          });
+        }
+      });
+    }
+
+    function renderTour(result) {
+      currentTour = result;
+      tourStepIdx = 0;
+      showTourStep();
+    }
+
+    function showTourStep() {
+      const existing = document.getElementById('tourCard');
+      if (existing) existing.remove();
+      const steps = currentTour.steps || [];
+      const step = steps[tourStepIdx];
+      if (!step) return;
+      const card = document.createElement('div');
+      card.className = 'tour-card';
+      card.id = 'tourCard';
+      card.innerHTML = `
+        <div style="font-size:0.75rem;color:#888">Step ${step.step} of ${currentTour.totalSteps}</div>
+        <h3>${step.title}</h3>
+        <p>${step.body}</p>
+        ${step.highlightStat ? `<p><strong>${step.highlightStat}</strong></p>` : ''}
+        <div class="tour-nav">
+          <button type="button" id="tourPrev" ${tourStepIdx === 0 ? 'disabled' : ''}>Back</button>
+          <button type="button" id="tourNext">${tourStepIdx >= steps.length - 1 ? 'Book a demo' : 'Next'}</button>
+        </div>`;
+      messagesEl.appendChild(card);
+      card.querySelector('#tourPrev')?.addEventListener('click', () => {
+        if (tourStepIdx > 0) { tourStepIdx--; showTourStep(); }
+      });
+      card.querySelector('#tourNext')?.addEventListener('click', () => {
+        if (tourStepIdx < steps.length - 1) { tourStepIdx++; showTourStep(); }
+        else addBubble('system', 'Ready to book a discovery call? Share your name and email.');
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function applySessionData(data, { showOpening = true } = {}) {
+      sessionId = data.sessionId;
+      visitorId = data.visitorId;
+      localStorage.setItem('boolmind_vid', visitorId);
+      if (data.productContext?.activeProduct) {
+        setActiveProduct(data.productContext.activeProduct);
+      } else if (data.productContext?.productName) {
+        productBadge.textContent = data.productContext.productName;
+      }
+      if (data.proactiveTriggers) {
+        setupProactiveTriggers(data.proactiveTriggers);
+      }
+      if (showOpening && data.openingMessage) {
+        const label = data.productContext?.productName || null;
+        addBubble('assistant', data.openingMessage, label);
+      }
+    }
+
+    async function initChat(options = {}) {
+      const res = await fetch(API + '/api/chat-init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitor_id: visitorId, page_context: pageContext() }),
+      });
+      if (!res.ok) {
+        addBubble('system', 'Could not start chat: ' + res.status);
+        return null;
+      }
+      const data = await res.json();
+      applySessionData(data, options);
+      return data;
+    }
+
+    async function clearChat() {
+      if (streaming) return;
+      clearBtn.disabled = true;
+      const previousSession = sessionId;
+      try {
+        messagesEl.innerHTML = '';
+        currentTour = null;
+        tourStepIdx = 0;
+        document.querySelectorAll('.proactive-toast').forEach((el) => el.remove());
+
+        if (!previousSession) {
+          await initChat({ showOpening: true });
+          return;
+        }
+        const res = await fetch(API + '/api/chat-clear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: previousSession,
+            visitor_id: visitorId,
+            page_context: pageContext(),
+          }),
+        });
+        if (!res.ok) {
+          addBubble('system', 'Could not clear chat: ' + res.status);
+          await initChat({ showOpening: true });
+          return;
+        }
+        const data = await res.json();
+        applySessionData(data, { showOpening: true });
+      } catch (e) {
+        addBubble('system', 'Could not clear chat: ' + e.message);
+      } finally {
+        clearBtn.disabled = false;
+      }
+    }
+
+    productSelect.addEventListener('change', () => setActiveProduct(productSelect.value || null));
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text || streaming || !sessionId) return;
+      inputEl.value = '';
+      addBubble('user', text);
+      streaming = true;
+      sendBtn.disabled = true;
+      clearBtn.disabled = true;
+      typingEl.hidden = false;
+      let assistantBubble = null;
+      let gotAssistantText = false;
+
+      try {
+        const res = await fetch(API + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: sessionId,
+            message: text,
+            page_context: pageContext(),
+            visitor_id: visitorId,
+            user_language: 'en',
+          }),
+        });
+        if (!res.ok) {
+          addBubble('system', 'Error: ' + res.status);
+          return;
+        }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data:')) continue;
+            const raw = line.slice(5).trim();
+            if (!raw) continue;
+            let evt;
+            try { evt = JSON.parse(raw); } catch { continue; }
+            if (evt.type === 'delta') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              if (!assistantBubble) {
+                const label = activeProduct ? PRODUCT_NAMES[activeProduct] : null;
+                assistantBubble = addBubble('assistant', '', label);
+                const span = assistantBubble.querySelector('span:last-child') || assistantBubble;
+                assistantBubble._textEl = span;
+              }
+              const el = assistantBubble._textEl || assistantBubble;
+              el.textContent += evt.content;
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            } else if (evt.type === 'tool_start') {
+              if (evt.tool === 'product_compare') {
+                typingEl.textContent = 'Comparing products…';
+              } else if (evt.tool === 'generate_fidp') {
+                typingEl.textContent = 'Generating visual preview…';
+              } else {
+                typingEl.textContent = 'Searching knowledge base…';
+              }
+              typingEl.hidden = false;
+            } else if (evt.type === 'visual') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              renderWorkflowVisual(evt);
+            } else if (evt.type === 'tool_result' && evt.tool === 'product_tour') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              renderTour(evt.result);
+              if (evt.result?.productId) setActiveProduct(evt.result.productId);
+            } else if (evt.type === 'tool_result' && evt.tool === 'product_compare') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              renderComparison(evt.result);
+            } else if (evt.type === 'tool_result' && evt.tool === 'generate_fidp') {
+              typingEl.hidden = true;
+              gotAssistantText = true;
+              renderFidp(evt.result);
+            } else if (evt.type === 'error') {
+              addBubble('system', evt.message || 'Something went wrong.');
+            } else if (evt.type === 'done') {
+              typingEl.hidden = true;
+              if (evt.activeProduct) setActiveProduct(evt.activeProduct);
+            }
+          }
+        }
+        if (buffer.startsWith('data:')) {
+          const raw = buffer.slice(5).trim();
+          if (raw) {
+            try {
+              const evt = JSON.parse(raw);
+              if (evt.type === 'delta' && evt.content) {
+                gotAssistantText = true;
+                if (!assistantBubble) {
+                  const label = activeProduct ? PRODUCT_NAMES[activeProduct] : null;
+                  assistantBubble = addBubble('assistant', '', label);
+                  assistantBubble._textEl = assistantBubble.querySelector('span:last-child') || assistantBubble;
+                }
+                const el = assistantBubble._textEl || assistantBubble;
+                el.textContent += evt.content;
+              } else if (evt.type === 'error') {
+                addBubble('system', evt.message || 'Something went wrong.');
+                gotAssistantText = true;
+              }
+            } catch { /* ignore */ }
+          }
+        }
+        if (!gotAssistantText) {
+          addBubble('system', 'No response was generated. Please try again.');
+        }
+      } catch (e) {
+        addBubble('system', 'Network error: ' + e.message);
+      } finally {
+        streaming = false;
+        sendBtn.disabled = false;
+        clearBtn.disabled = false;
+        typingEl.hidden = true;
+        typingEl.textContent = 'Thinking…';
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    clearBtn.addEventListener('click', clearChat);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    initChat();
+  </script>
+</body>
+</html>

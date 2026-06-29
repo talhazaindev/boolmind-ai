@@ -1,0 +1,39 @@
+# Git and IDE
+.git
+.gitignore
+.idea
+.cursor
+
+# Local env and secrets
+.env
+.env.*
+!.env.example
+
+# Python artifacts
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+htmlcov
+.coverage
+*.egg-info
+
+# Node / future widget build
+node_modules
+dist
+
+# Large or generated runtime data (mount as volumes instead)
+data/fidp-output
+
+# Docs and plans (not needed at runtime)
+*.pdf
+.cursor/plans
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test and dev-only
+tests
+scripts/run_manual_tests.py
+docs

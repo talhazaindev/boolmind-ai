@@ -1,0 +1,14 @@
+[
+  {
+    "id": "x-01",
+    "query": "Compare Retify ECG Legal workflow step counts",
+    "namespace": "general",
+    "must_contain": ["10", "7", "6"]
+  },
+  {
+    "id": "x-02",
+    "query": "Boolmind product verticals retail healthcare legal",
+    "namespace": "general",
+    "must_contain": ["Retify", "ECG", "Legal"]
+  }
+]

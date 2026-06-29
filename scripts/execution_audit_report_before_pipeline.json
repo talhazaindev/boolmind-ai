@@ -1,0 +1,363 @@
+[
+  {
+    "name": "logistics_bottleneck",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We run a logistics company. Orders are growing but dispatch delays are getting worse.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "timeout",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "timeout",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "Boolmind capability / factual lookup required",
+          "tool_plan_arguments": {
+            "query": "We run a logistics company. Orders are growing but dispatch delays are getting worse. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "routing_confidence:0.50->DISCOVERY"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category"
+          ]
+        },
+        "flags": [
+          "STUCK_IN_DISCOVERY"
+        ],
+        "assistant_text": "Your challenge with growing orders and worsening dispatch delays highlights a critical bottleneck in manual planning processes. To address this, we need to understand how your planning workflows currently function and what systems you\u2019re using to manage them. Could you share more about your existing planning tools or processes?\n\nWhat constraints drive planning decisions\u2014territory, vehicle capacity, SLA windows, or customer tiers?"
+      },
+      {
+        "turn": 2,
+        "message": "We dispatch around 1,500 shipments per day. Planning is done manually in spreadsheets by three coordinators. Drivers often wait 30\u201360 minutes during peak periods.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "Boolmind capability / factual lookup required",
+          "tool_plan_arguments": {
+            "query": "We dispatch around 1,500 shipments per day. Planning is done manually in spreadsheets by three coordinators. Drivers oft capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "routing_confidence:0.50->keep_DIAGNOSE"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ]
+        },
+        "flags": [],
+        "assistant_text": "Observation: 1,500 shipments/day with manual spreadsheet planning  \nEvidence: Manual processes at this scale create inefficiencies, increasing coordination complexity and delaying dispatch decisions  \nInference: The manual bottleneck is causing unscalable planning and contributing to driver wait times during peak periods (confidence: high)  \n\nObservation: Drivers wait 30\u201360 minutes during peak periods  \nEvidence: Delayed dispatch decisions directly impact driver utilization and operational costs  \nInference: Inefficient planning workflows are exacerbating delays as shipment volume increases (confidence: medium)  \n\nObservation: Three coordinators manage planning manually  \nEvidence: Human capacity limits and error-prone manual entry reduce planning accuracy and speed  \nInference: Current planning method cannot sustain growth without systemic process redesign (confidence: high)\n\nHow do coordinators currently decide which driver receives which shipment\u2014availability, geography, vehicle type, customer priority, or another rule?"
+      },
+      {
+        "turn": 3,
+        "message": "What do you recommend?",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "advice_request",
+          "intent_confidence": 0.9,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "Boolmind capability / factual lookup required",
+          "tool_plan_arguments": {
+            "query": "What do you recommend? capabilities features workflow delay",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "routing_confidence:0.50->keep_DIAGNOSE"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "business_vertical",
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "scale",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ]
+        },
+        "flags": [],
+        "assistant_text": "Observation: Manual spreadsheet planning for 1,500 shipments/day with three coordinators  \nEvidence: Scalability limits of manual processes are evident at this volume, compounding delays during peak periods  \nInference: Current workflow lacks automation to handle growth, requiring systemic process evaluation (confidence: high)  \n\nObservation: Driver wait times of 30\u201360 minutes during peak periods  \nEvidence: Inefficient dispatch decisions directly correlate with idle driver capacity and increased operational costs  \nInference: Bottleneck in planning is likely exacerbated by lack of real-time data integration (confidence: medium)  \n\nWhat systems or tools do coordinators use to track shipment status, driver availability, or route constraints during planning?\n\nHow do coordinators currently decide which driver receives which shipment\u2014availability, geography, vehicle type, customer priority, or another rule?"
+      },
+      {
+        "turn": 4,
+        "message": "We are a manufacturing company with 40 employees.",
+        "http_status": 200,
+        "tools": [
+          "rag_query"
+        ],
+        "tool_outcomes": [
+          {
+            "tool": "rag_query",
+            "outcome": "success",
+            "duration_ms": null
+          }
+        ],
+        "execution_mode": "DIAGNOSE",
+        "internal_mode": "diagnose",
+        "routing_confidence": 0.5,
+        "rag_status": "ok",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.5,
+          "tool_confidence": 0.5,
+          "execution_mode": "DIAGNOSE",
+          "internal_mode": "diagnose",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "custom_solutions",
+          "solution_reasons": [
+            "dispatch",
+            "shipment",
+            "logistics"
+          ],
+          "rag_required": true,
+          "tool_selected": "rag_query",
+          "tool_reason": "Boolmind capability / factual lookup required",
+          "tool_plan_arguments": {
+            "query": "We are a manufacturing company with 40 employees. capabilities features workflow",
+            "namespace": "capabilities",
+            "top_k": 3
+          },
+          "confidence_gates_applied": [
+            "routing_confidence:0.50->keep_DIAGNOSE"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "industry",
+            "primary_bottleneck",
+            "goal",
+            "fact_logistics company",
+            "fact_planning is manual b",
+            "solution_category",
+            "planning_tool",
+            "driver_wait",
+            "planning_method",
+            "system_manual",
+            "system_spreadsheet",
+            "fact_1,500 shipments/day",
+            "fact_manual spreadsheet p",
+            "fact_drivers wait 30\u201360 m"
+          ]
+        },
+        "flags": [],
+        "assistant_text": "Observation: 40 employees in a manufacturing context with logistics operations  \nEvidence: Employee count may influence resource allocation but does not directly address the scalability issue in manual logistics planning  \nInference: Manufacturing operations may introduce additional constraints on logistics planning (e.g., production schedules, inventory availability) that are not yet quantified (confidence: low)  \n\nObservation: Manual planning for 1,500 shipments/day with no automation  \nEvidence: Discrepancy between employee count and operational scale suggests unoptimized workflows  \nInference: Current planning method may be insufficient to handle both manufacturing and logistics demands without systemic redesign (confidence: medium)  \n\nWhat systems or tools do manufacturing operations use to coordinate with logistics planning\u2014ERP, WMS, or another platform?\n\nHow do coordinators currently decide which driver receives which shipment\u2014availability, geography, vehicle type, customer priority, or another rule?"
+      }
+    ]
+  },
+  {
+    "name": "premature_solution_block",
+    "turns": [
+      {
+        "turn": 1,
+        "message": "We have operational inefficiencies and want to improve efficiency.",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "discover",
+        "routing_confidence": 0.17,
+        "rag_status": "skipped",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "general",
+          "intent_confidence": 0.5,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "discover",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "undecided",
+          "solution_reasons": [],
+          "rag_required": false,
+          "tool_selected": null,
+          "tool_reason": null,
+          "tool_plan_arguments": null,
+          "confidence_gates_applied": [
+            "routing_confidence:0.17->DISCOVERY"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ]
+        },
+        "flags": [],
+        "assistant_text": "To address operational inefficiencies, we first need to understand the specific areas where processes are slowing you down\u2014such as data management, document workflows, or forecasting accuracy. Could you share an example of a task or system that feels particularly inefficient or error-prone?\n\nWhat does a typical workflow look like from request to delivery?"
+      },
+      {
+        "turn": 2,
+        "message": "What do you recommend we should do?",
+        "http_status": 200,
+        "tools": [],
+        "tool_outcomes": [],
+        "execution_mode": "DISCOVERY",
+        "internal_mode": "advise",
+        "routing_confidence": 0.17,
+        "rag_status": "skipped",
+        "quality_passed": true,
+        "stage": "EXPLORE",
+        "resolution_trace": [],
+        "router_decision": {
+          "intent": "advice_request",
+          "intent_confidence": 0.9,
+          "routing_confidence": 0.17,
+          "tool_confidence": 0.17,
+          "execution_mode": "DISCOVERY",
+          "internal_mode": "advise",
+          "catalog_product_fit": null,
+          "catalog_reasons": [],
+          "solution_category": "undecided",
+          "solution_reasons": [],
+          "rag_required": false,
+          "tool_selected": null,
+          "tool_reason": null,
+          "tool_plan_arguments": null,
+          "confidence_gates_applied": [
+            "solutioning_blocked->DIAGNOSE",
+            "routing_confidence:0.17->DISCOVERY"
+          ],
+          "resolution_trace": [],
+          "memory_lines_used": [
+            "primary_bottleneck",
+            "goal"
+          ]
+        },
+        "flags": [],
+        "assistant_text": "To align recommendations with your needs, I first need to understand the scope and context of your inefficiencies. Are these issues isolated to specific departments (e.g., sales, operations, legal) or widespread across your organization? Additionally, do you currently use any tools or systems that could be contributing to these inefficiencies?\n\nHow do coordinators currently decide which driver receives which shipment\u2014availability, geography, vehicle type, customer priority, or another rule?"
+      }
+    ]
+  }
+]

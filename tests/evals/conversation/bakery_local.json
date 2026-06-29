@@ -1,0 +1,21 @@
+{
+  "scenario": "bakery_local",
+  "description": "Local bakery owner unsure about online presence",
+  "turns": [
+    {
+      "user": "Before I answer that, can you explain what you mean by online presence?",
+      "expect_intent": "concept_explanation",
+      "expect_no_boolmind_in_block": true
+    },
+    {
+      "user": "I run a local bakery. Do I really need a website?",
+      "expect_intent": "advice_request",
+      "expect_vertical": "local_food",
+      "expect_pushback": true
+    },
+    {
+      "user": "I only have about $500 for marketing this year",
+      "expect_micro_budget": true
+    }
+  ]
+}

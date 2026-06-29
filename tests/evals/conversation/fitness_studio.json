@@ -1,0 +1,12 @@
+{
+  "scenario": "fitness_studio",
+  "description": "Fitness studio growth — opening value and insight before tactics",
+  "opening": "Hi. I own a small business and I'm looking for ways to grow, but I'm not sure where to invest my time or money. I've heard people talk about websites, SEO, social media, online ads, and AI tools, but I don't know what's actually worth focusing on.",
+  "turns": [
+    {
+      "user": "We run a local fitness studio. Most of our members come from referrals and people who live nearby.",
+      "expect_mode": "diagnose",
+      "expect_vertical": "local_services"
+    }
+  ]
+}

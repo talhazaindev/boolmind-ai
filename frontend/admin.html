@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boolmind Advisor — Monitoring</title>
+  <style>
+    :root {
+      --bg: #0f1629;
+      --card: #1a2238;
+      --border: #2a3555;
+      --text: #e8e8f0;
+      --muted: #8892b0;
+      --accent: #3DBDD6;
+      --purple: #5B4FD6;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --err: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+    header { padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 1.25rem; color: var(--accent); }
+    header a { color: var(--purple); text-decoration: none; }
+    .tabs { display: flex; gap: 0; padding: 0 2rem; border-bottom: 1px solid var(--border); }
+    .tab { padding: 0.75rem 1.25rem; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    main { padding: 1.5rem 2rem; max-width: 1200px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    .card h3 { margin: 0 0 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; }
+    .card .val { font-size: 1.5rem; font-weight: 600; }
+    .card.ok .val { color: var(--ok); }
+    .card.off .val { color: var(--err); }
+    .card.warn .val { color: var(--warn); }
+    .bar-row { display: flex; align-items: center; gap: 0.75rem; margin: 0.4rem 0; font-size: 0.9rem; }
+    .bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    button, .btn { background: var(--purple); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    input[type=text] { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; border-radius: 6px; width: 320px; max-width: 100%; }
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li { padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: var(--card); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 0.875rem; }
+    .timeline li.timeout { border-left-color: var(--warn); }
+    .timeline li.error, .timeline li.failed { border-left-color: var(--err); }
+    .timeline li.gated { border-left-color: var(--muted); }
+    .meta { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+    .links a { display: block; margin: 0.5rem 0; color: var(--accent); }
+    .status-msg { color: var(--muted); font-size: 0.85rem; margin-top: 0.5rem; }
+    .refresh-note { margin-left: auto; font-size: 0.8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Advisor Monitoring</h1>
+    <a href="/advisor">← Chat</a>
+    <span class="refresh-note" id="refreshNote"></span>
+  </header>
+  <nav class="tabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="failed">Failed Ops</div>
+    <div class="tab" data-tab="session">Session Inspector</div>
+    <div class="tab" data-tab="links">External</div>
+  </nav>
+  <main>
+    <section class="panel active" id="panel-overview">
+      <div class="grid" id="integrationCards"></div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <h3>Tool outcomes (last 1h)</h3>
+        <div id="outcomeBars"></div>
+      </div>
+      <div class="grid" id="metricCards"></div>
+    </section>
+
+    <section class="panel" id="panel-failed">
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+        <button id="retryBtn">Retry all pending</button>
+        <span class="status-msg" id="retryStatus"></span>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Source</th><th>Operation</th><th>Error</th><th>Retries</th><th>Created</th></tr></thead>
+          <tbody id="failedTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-session">
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+        <input type="text" id="sessionInput" placeholder="Paste session_id from chat test" />
+        <button id="loadSessionBtn">Load events</button>
+      </div>
+      <ul class="timeline" id="sessionTimeline"></ul>
+    </section>
+
+    <section class="panel" id="panel-links">
+      <div class="card links">
+        <h3>Dashboards</h3>
+        <a href="http://localhost:3001" target="_blank" rel="noopener">Grafana (local docker --profile monitoring)</a>
+        <a href="http://localhost:9090" target="_blank" rel="noopener">Prometheus</a>
+        <a id="posthogLink" href="#" target="_blank" rel="noopener" style="display:none">PostHog</a>
+        <a id="sentryLink" href="#" target="_blank" rel="noopener" style="display:none">Sentry</a>
+        <a href="/metrics" target="_blank" rel="noopener">Raw /metrics</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    const API = '/api/admin';
+    let refreshTimer = null;
+
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+        if (t.dataset.tab === 'overview') startAutoRefresh();
+        else stopAutoRefresh();
+      });
+    });
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      refreshTimer = setInterval(loadOverview, 10000);
+      document.getElementById('refreshNote').textContent = 'Auto-refresh 10s';
+    }
+    function stopAutoRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = null;
+      document.getElementById('refreshNote').textContent = '';
+    }
+
+    async function fetchJson(path) {
+      const r = await fetch(path);
+      if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
+      return r.json();
+    }
+
+    function integrationCard(name, status) {
+      const s = (status || 'OFF').toUpperCase();
+      const cls = s === 'ON' ? 'ok' : s === 'DEGRADED' ? 'warn' : 'off';
+      return `<div class="card ${cls}"><h3>${name}</h3><div class="val">${s}</div></div>`;
+    }
+
+    async function loadOverview() {
+      try {
+        const [stats, metrics] = await Promise.all([
+          fetchJson(API + '/stats'),
+          fetchJson(API + '/metrics/summary'),
+        ]);
+        const health = stats.integrationHealth || {};
+        const integ = stats.integrations || {};
+        document.getElementById('integrationCards').innerHTML = [
+          integrationCard('Advisor', stats.advisorReady ? 'ON' : 'OFF'),
+          integrationCard('Telemetry', stats.telemetryEnabled ? 'ON' : 'OFF'),
+          integrationCard('HubSpot', health.hubspot || (integ.hubspot ? 'ON' : 'OFF')),
+          integrationCard('Cal.com', health.calcom || (integ.calcom ? 'ON' : 'OFF')),
+          integrationCard('Resend', health.resend || (integ.resend ? 'ON' : 'OFF')),
+          integrationCard('Supabase', health.supabase || (integ.supabase ? 'ON' : 'OFF')),
+          integrationCard('PostHog', health.posthog || (integ.posthog ? 'ON' : 'OFF')),
+          integrationCard('Sentry', health.sentry || (integ.sentry ? 'ON' : 'OFF')),
+        ].join('');
+
+        const outcomes = metrics.tool_outcomes || {};
+        const total = Object.values(outcomes).reduce((a, b) => a + b, 0) || 1;
+        const colors = { success: 'var(--ok)', timeout: 'var(--warn)', error: 'var(--err)', gated: 'var(--muted)' };
+        document.getElementById('outcomeBars').innerHTML = Object.entries(outcomes).map(([k, v]) => {
+          const pct = Math.round((v / total) * 100);
+          return `<div class="bar-row"><span style="width:70px">${k}</span><div class="bar"><div class="bar-fill" style="width:${pct}%;background:${colors[k]||'var(--accent)'}"></div></div><span>${v}</span></div>`;
+        }).join('') || '<p class="meta">No tool events yet</p>';
+
+        document.getElementById('metricCards').innerHTML = [
+          ['Failed ops', stats.failedOperations],
+          ['Rate limits (1h)', metrics.rate_limit_count],
+          ['Avg tool ms', metrics.avg_tool_latency_ms],
+          ['P95 tool ms', metrics.p95_tool_latency_ms],
+          ['Turns (1h)', metrics.turn_count],
+          ['Avg turn ms', metrics.avg_turn_latency_ms],
+        ].map(([h, v]) => `<div class="card"><h3>${h}</h3><div class="val">${v ?? '—'}</div></div>`).join('');
+
+        if (stats.links && stats.links.posthog) {
+          const pl = document.getElementById('posthogLink');
+          pl.href = stats.links.posthog;
+          pl.style.display = 'block';
+        }
+        if (stats.links && stats.links.sentry) {
+          const sl = document.getElementById('sentryLink');
+          sl.href = stats.links.sentry;
+          sl.style.display = 'block';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadFailedOps() {
+      try {
+        const data = await fetchJson(API + '/failed-ops');
+        const items = data.combined || [...(data.memory || []), ...(data.supabase || [])];
+        const rows = items.map(item => `
+          <tr>
+            <td>${item.source || 'memory'}</td>
+            <td>${item.operation}</td>
+            <td>${(item.error || item.error_message || '').slice(0, 80)}</td>
+            <td>${item.retries ?? 0}</td>
+            <td>${item.created_at || '—'}</td>
+          </tr>`).join('');
+        document.getElementById('failedTable').innerHTML = rows || '<tr><td colspan="5">No pending failed operations</td></tr>';
+      } catch (e) {
+        document.getElementById('failedTable').innerHTML = `<tr><td colspan="5">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('retryBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('retryBtn');
+      const st = document.getElementById('retryStatus');
+      btn.disabled = true;
+      st.textContent = 'Retrying…';
+      try {
+        const r = await fetch('/api/retry-failed-ops', { method: 'POST' });
+        const d = await r.json();
+        st.textContent = `Retried ${d.retried}, succeeded ${d.succeeded ?? 0}, pending ${d.pending}`;
+        loadFailedOps();
+        loadOverview();
+      } catch (e) {
+        st.textContent = 'Error: ' + e.message;
+      }
+      btn.disabled = false;
+    });
+
+    document.getElementById('loadSessionBtn').addEventListener('click', async () => {
+      const sid = document.getElementById('sessionInput').value.trim();
+      const tl = document.getElementById('sessionTimeline');
+      if (!sid) { tl.innerHTML = '<li>Enter a session_id</li>'; return; }
+      tl.innerHTML = '<li>Loading…</li>';
+      try {
+        const data = await fetchJson(API + '/sessions/' + encodeURIComponent(sid) + '/events');
+        if (!data.events || !data.events.length) {
+          tl.innerHTML = '<li class="meta">No events (Supabase may be unconfigured or session empty)</li>';
+          return;
+        }
+        tl.innerHTML = data.events.map(ev => {
+          const meta = ev.metadata || {};
+          const cls = ev.event_type.includes('timeout') ? 'timeout'
+            : ev.event_type.includes('failed') || ev.event_type.includes('error') ? 'error'
+            : ev.event_type.includes('gated') ? 'gated' : '';
+          const extra = meta.duration_ms != null ? ` · ${meta.duration_ms}ms` : '';
+          const tool = meta.tool ? ` · ${meta.tool}` : '';
+          return `<li class="${cls}"><strong>${ev.event_type}</strong>${tool}${extra}<div class="meta">${ev.created_at || ''}</div></li>`;
+        }).join('');
+      } catch (e) {
+        tl.innerHTML = `<li>Error: ${e.message}</li>`;
+      }
+    });
+
+    loadOverview();
+    loadFailedOps();
+    startAutoRefresh();
+  </script>
+</body>
+</html>

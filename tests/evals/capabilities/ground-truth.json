@@ -1,0 +1,12 @@
+[
+  {"id": "cap-01", "query": "fleet management driver workload custom solution", "namespace": "capabilities", "product_fit": "custom_solutions", "must_contain": ["fleet"]},
+  {"id": "cap-02", "query": "transportation logistics bespoke platform Boolmind", "namespace": "capabilities", "product_fit": "custom_solutions", "must_contain": ["custom"]},
+  {"id": "cap-03", "query": "web development mobile app Boolmind services", "namespace": "capabilities", "must_contain": ["web"]},
+  {"id": "cap-04", "query": "applied AI engineering custom ML optimization", "namespace": "capabilities", "must_contain": ["applied"]},
+  {"id": "cap-05", "query": "AI automation solutions workflow", "namespace": "capabilities", "must_contain": ["automation"]},
+  {"id": "cap-06", "query": "product fit routing fleet not Retify", "namespace": "capabilities", "must_contain": ["custom"]},
+  {"id": "cap-07", "query": "custom solutions engagement discovery scoping", "namespace": "capabilities", "must_contain": ["discovery"]},
+  {"id": "cap-08", "query": "bespoke fleet dashboard mobile app development", "namespace": "capabilities", "must_contain": ["mobile"]},
+  {"id": "cap-09", "query": "when to recommend custom vs catalog product", "namespace": "capabilities", "must_contain": ["catalog"]},
+  {"id": "cap-10", "query": "driver workload ML optimization transportation", "namespace": "capabilities", "product_fit": "custom_solutions", "must_contain": ["driver"]}
+]

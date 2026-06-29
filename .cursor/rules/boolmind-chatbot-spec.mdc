@@ -1,0 +1,90 @@
+---
+description: Boolmind chatbot implementation spec — MUST/NEVER rules, TypeScript strictness, tool error handling (Section 14)
+alwaysApply: true
+---
+
+# Boolmind Chatbot — Section 14 Compliance
+
+Reference: Implementation Plan v2.0. Package versions: Section 2.2 only — never suggest upgrades.
+
+## 14.1 What You MUST Always Do
+
+- Use exact package versions from Section 2.2. Never suggest upgrading.
+- Use `export const runtime = "edge"` on `/api/chat`. Never remove it.
+- Call Anthropic API with `stream: true`. Never buffer the full response.
+- Validate all request inputs with Zod before processing.
+- Check tool timeout budgets (Section 2.4.4). Implement timeouts with `Promise.race()`.
+- Write tool results back into the conversation before continuing Claude generation.
+- Use parameterized queries for all DB operations. No SQL string concatenation.
+- Emit PostHog events as defined in `analytics/events.ts`.
+- Handle `failed_operations` fallback for CRM, calendar, and email tools.
+- Write unit tests alongside new modules. **90%+ coverage** is the baseline.
+- Include correct `product_id` in `crm_create_lead` — `primary_product` must be one of: `retify`, `ecg`, `legal`.
+- Populate `products_discussed` in `crm_create_lead` — never leave empty if any product was discussed.
+- Target Pinecone namespace from `activeProduct` via `namespaces.ts` — never hardcode namespaces elsewhere.
+- Validate product tour JSON before load: `productId`, `productName`, `totalSteps`, `steps[]` with required fields.
+
+## 14.2 What You MUST Never Do
+
+- Store conversation messages permanently in any database. **Redis only, 2-hour TTL.**
+- Send PII (name, email) to PostHog. Use session IDs and anonymized data only.
+- Hardcode the system prompt. Always use `buildSystemPrompt()`.
+- Call `crm_create_lead` more than once per session per email address.
+- Return HTTP 500 to the client. Catch all errors; return SSE error events.
+- Ask for phone numbers or company size in lead capture.
+- Use `EventSource` for streaming. Use `fetch` + `ReadableStream` (POST required).
+- Put business logic in the widget layer. Widget displays and dispatches only.
+- Call Claude from the client. All LLM calls go through `/api/chat`.
+- Exceed **20 messages** in the Redis conversation history window.
+- Hardcode product names, workflow steps, or feature descriptions in widget or API route. Use RAG via `rag_query`.
+- Return product comparison from hardcoded values. Always use `product_compare` (knowledge base).
+- Mix product contexts (e.g. Retify discussion + ECG knowledge) unless the user explicitly asks.
+- Claim two products have identical features. Distinct workflows: Retify (10 steps), ECG (7), Legal (6).
+
+## 14.3 When You Are Unsure
+
+- Edge case not in the spec → add a `TODO` and flag for human review. Do not guess.
+- New tool → define full JSON schema in `tools.ts` before the handler. Never handler-without-schema.
+- System prompt changes → re-run token count validation in tests. **Max 1800 tokens.**
+- Unclear third-party API schema → mock first, write handler, then validate against real API.
+- New product checklist (do not skip steps): (1) knowledge-base docs, (2) Pinecone namespace, (3) `namespaces.ts`, (4) `PRODUCT_KEYWORDS`, (5) URL mapping, (6) tour JSON, (7) 30 eval questions.
+
+## 14.4 TypeScript Strictness
+
+`tsconfig.json` — non-negotiable:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
+```
+
+- Every function: explicit return type. No implicit `any`.
+- No `as any` except in test mocks (comment why).
+
+## 14.5 Tool Handler Error Pattern
+
+Use for **all** async tool calls:
+
+```typescript
+async function handleTool(input: ToolInput): Promise<ToolResult> {
+  try {
+    const result = await withTimeout(externalApiCall(input), TIMEOUT_MS);
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof TimeoutError) {
+      await queueToFailedOperations(input);
+      return { success: false, fallback: FALLBACK_MESSAGE };
+    }
+    Sentry.captureException(error, {
+      extra: { input, productContext: input.product_id },
+    });
+    return { success: false, fallback: GENERIC_ERROR_MESSAGE };
+  }
+}
+```

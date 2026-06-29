@@ -1,0 +1,42 @@
+# Boolmind AI — API only (external Upstash Redis + hosted Pinecone + SaaS APIs).
+#
+#   cp .env.example .env   # fill GROQ_*, UPSTASH_*, PINECONE_*, etc.
+#   docker compose -f docker-compose.cloud.yml up -d --build
+
+name: boolmind-ai-cloud
+
+services:
+  advisor-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: boolmind-ai/advisor-api:latest
+    container_name: boolmind-advisor-api
+    ports:
+      - "${ADVISOR_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      REDIS_BACKEND: upstash
+      PINECONE_MODE: cloud
+      HF_HOME: /data/huggingface
+      FIDP_OUTPUT_DIR: /data/fidp-output
+      IMAGE_GEN_PROVIDER: ${IMAGE_GEN_PROVIDER:-mock}
+      CHATTERBOX_TTS_URL: ${CHATTERBOX_TTS_URL:-http://host.docker.internal:4123}
+    volumes:
+      - huggingface-cache:/data/huggingface
+      - fidp-output:/data/fidp-output
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  huggingface-cache:
+  fidp-output:

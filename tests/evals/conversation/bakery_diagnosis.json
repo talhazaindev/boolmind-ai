@@ -1,0 +1,11 @@
+{
+  "scenario": "bakery_diagnosis",
+  "description": "Bakery with GBP and Instagram underperforming — diagnose before tactics",
+  "turns": [
+    {
+      "user": "We already have a Google Business Profile and an Instagram page, but neither seems to bring in many new customers.",
+      "expect_mode": "diagnose",
+      "expect_blocker": "discovery"
+    }
+  ]
+}
